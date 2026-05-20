@@ -447,12 +447,11 @@ function renderHome() {
 
   // QA
   const qas = [
-    { i: '💸', bg: 'rgba(232,48,74,.15)', l: 'Расход', fn: () => openAddM('expense') },
-    { i: '💰', bg: 'rgba(0,184,118,.15)', l: 'Доход', fn: () => openAddM('income') },
-    { i: '🔄', bg: 'rgba(43,111,237,.15)', l: 'Перевод', fn: () => openAddM('transfer') },
-    { i: '⚡', bg: 'rgba(240,144,10,.15)', l: 'Шаблоны', fn: () => nav('templates') },
     { i: '🎯', bg: 'rgba(99,102,241,.15)', l: 'Цели', fn: () => nav('goals') },
     { i: '🔁', bg: 'rgba(139,92,246,.15)', l: 'Платежи', fn: () => nav('recurring') },
+    { i: '🤝', bg: 'rgba(240,144,10,.15)', l: 'Долги', fn: () => nav('debts') },
+    { i: '🏷️', bg: 'rgba(20,184,166,.15)', l: 'Категории', fn: () => nav('categories') },
+    { i: '⚡', bg: 'rgba(240,144,10,.15)', l: 'Шаблоны', fn: () => nav('templates') },
     { i: '🐷', bg: 'rgba(139,92,246,.18)', l: 'Копилка', fn: () => openPiggy() },
   ];
   const qaEl = document.getElementById('h-qa');
@@ -493,14 +492,6 @@ function renderHome() {
     ucRow.style.display = '';
     ucList.innerHTML = upcoming.map(r => `<div class="upc"><div class="upc-ic" style="background:${getCat(r.category || 'other').color}18">${r.icon || getCat(r.category || 'other').icon}</div><div class="upc-b"><div class="upc-n">${r.name}</div><div class="upc-s">Через ${r.dl} дн. · ${r.nd.getDate()} ${MONTHS[r.nd.getMonth()]}</div></div><div class="upc-a">−${fmt(r.amount)} ${curSym()}</div></div>`).join('');
   } else { ucRow.style.display = 'none'; ucList.innerHTML = ''; }
-
-  // Section counts
-  const sbGoals = document.getElementById('sb-goals-cnt');
-  if (sbGoals) sbGoals.textContent = S.goals.length;
-  const sbRec = document.getElementById('sb-rec-cnt');
-  if (sbRec) sbRec.textContent = S.recurring.length;
-  const sbDebts = document.getElementById('sb-debts-cnt');
-  if (sbDebts) sbDebts.textContent = (S.debts||[]).filter(d=>!d.done).length;
 
   // Recent
   const recent = [...S.transactions].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 7);
