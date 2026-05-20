@@ -705,7 +705,7 @@ mark{background:rgba(240,144,10,.35)}
 .sec-btn:active{transform:scale(.95);opacity:.8}
 .sec-btn-ico{font-size:28px;line-height:1}
 .sec-btn-n{font-size:13px;font-weight:700;color:#F5F4F0;white-space:nowrap}
-.sec-btn-cnt{font-family:'Clash Display',sans-serif;font-size:20px;font-weight:700;line-height:1;color:var(--ink3)}
+.sec-btn-cnt{font-family:'Clash Display',sans-serif;font-size:16px;font-weight:700;line-height:1;color:var(--ink3)}
 
 /* ── DEBT CARDS ── */
 .debt-list{padding:0 16px;display:flex;flex-direction:column;gap:12px;padding-bottom:8px}
