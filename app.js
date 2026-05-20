@@ -467,13 +467,13 @@ function renderHome() {
     ucList.innerHTML = upcoming.map(r => `<div class="upc"><div class="upc-ic" style="background:${getCat(r.category || 'other').color}18">${r.icon || getCat(r.category || 'other').icon}</div><div class="upc-b"><div class="upc-n">${r.name}</div><div class="upc-s">Через ${r.dl} дн. · ${r.nd.getDate()} ${MONTHS[r.nd.getMonth()]}</div></div><div class="upc-a">−${fmt(r.amount)} €</div></div>`).join('');
   } else { ucRow.style.display = 'none'; ucList.innerHTML = ''; }
 
-  // Section badges
+  // Section counts
   const sbGoals = document.getElementById('sb-goals-cnt');
-  if (sbGoals) sbGoals.textContent = S.goals.length || '';
+  if (sbGoals) sbGoals.textContent = S.goals.length;
   const sbRec = document.getElementById('sb-rec-cnt');
-  if (sbRec) sbRec.textContent = S.recurring.length || '';
+  if (sbRec) sbRec.textContent = S.recurring.length;
   const sbDebts = document.getElementById('sb-debts-cnt');
-  if (sbDebts) { const ad = (S.debts||[]).filter(d=>!d.done).length; sbDebts.textContent = ad || ''; }
+  if (sbDebts) sbDebts.textContent = (S.debts||[]).filter(d=>!d.done).length;
 
   // Recent
   const recent = [...S.transactions].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 7);

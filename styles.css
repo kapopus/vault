@@ -700,14 +700,12 @@ mark{background:rgba(240,144,10,.35)}
 /* ── END DARK ── */
 
 /* ── SEC BTNS (home screen pills) ── */
-.sec-btns{display:flex;gap:8px;padding:0 22px;margin-bottom:20px;overflow-x:auto}
-.sec-btns::-webkit-scrollbar{display:none}
-.sec-btn{flex-shrink:0;display:flex;align-items:center;gap:7px;padding:9px 16px;border-radius:22px;border:1.5px solid rgba(255,255,255,.1);background:#1c1c1e;cursor:pointer;font-family:'Satoshi',sans-serif;-webkit-tap-highlight-color:transparent;transition:.15s}
-.sec-btn:active{transform:scale(.93);opacity:.7}
-.sec-btn-ico{font-size:16px;line-height:1}
+.sec-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 22px;margin-bottom:20px}
+.sec-btn{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-radius:20px;border:1.5px solid rgba(255,255,255,.1);background:#1c1c1e;cursor:pointer;font-family:'Satoshi',sans-serif;-webkit-tap-highlight-color:transparent;transition:.15s}
+.sec-btn:active{transform:scale(.95);opacity:.8}
+.sec-btn-ico{font-size:28px;line-height:1}
 .sec-btn-n{font-size:13px;font-weight:700;color:#F5F4F0;white-space:nowrap}
-.sec-btn-badge{min-width:18px;height:18px;border-radius:9px;background:var(--rd);color:#fff;font-size:10px;font-weight:800;display:none;align-items:center;justify-content:center;padding:0 5px}
-.sec-btn-badge:not(:empty){display:flex}
+.sec-btn-cnt{font-family:'Clash Display',sans-serif;font-size:20px;font-weight:700;line-height:1;color:var(--ink3)}
 
 /* ── DEBT CARDS ── */
 .debt-list{padding:0 16px;display:flex;flex-direction:column;gap:12px;padding-bottom:8px}
