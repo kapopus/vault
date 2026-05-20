@@ -452,7 +452,6 @@ function renderHome() {
     { i: '🤝', bg: 'rgba(240,144,10,.15)', l: 'Долги', fn: () => nav('debts') },
     { i: '🏷️', bg: 'rgba(20,184,166,.15)', l: 'Категории', fn: () => nav('categories') },
     { i: '⚡', bg: 'rgba(240,144,10,.15)', l: 'Шаблоны', fn: () => nav('templates') },
-    { i: '🐷', bg: 'rgba(139,92,246,.18)', l: 'Копилка', fn: () => openPiggy() },
   ];
   const qaEl = document.getElementById('h-qa');
   qaEl.innerHTML = qas.map((q, i) => `<div class="qa-i" data-qi="${i}"><div class="qa-ic" style="background:${q.bg}">${q.i}</div><div class="qa-l">${q.l}</div></div>`).join('');
@@ -1562,6 +1561,8 @@ function renderProfile() {
   document.getElementById('ps-days').textContent = dates.length ? Math.floor((new Date() - new Date(Math.min(...dates))) / 86400000) + 1 : 0;
   document.getElementById('p-cash').textContent = fmt(acctBal('cash')) + ' ' + curSym();
   document.getElementById('p-bank').textContent = fmt(acctBal('bank')) + ' ' + curSym();
+  const pPiggy = document.getElementById('p-piggy');
+  if (pPiggy) pPiggy.textContent = fmt((S.piggy && S.piggy.balance) || 0) + ' ' + curSym();
   // Streak
   const streak = calcStreak();
   document.getElementById('str-val').textContent = streak;
@@ -1937,6 +1938,7 @@ function confirmPiggy(isAdd, btn) {
   save();
   btn.closest('div[style*=fixed]').remove();
   renderPiggy();
+  if (curSc === 'profile') renderProfile();
   launchConfetti();
   toast(isAdd ? `🐷 +${fmt(amt)} ${curSym()} в копилку!` : `💸 −${fmt(amt)} ${curSym()} из копилки`);
 }

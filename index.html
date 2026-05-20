@@ -61,7 +61,7 @@
     </div>
   </div>
   <div class="row" style="margin-bottom:10px"><div class="row-t">Быстрые действия</div></div>
-  <div class="qa" id="h-qa" style="padding-right:22px"></div>
+  <div class="qa" id="h-qa"></div>
   <div class="row"><div class="row-t">Аналитика</div><div class="row-a" onclick="nav('stats')">Подробнее →</div></div>
   <div class="ins" id="h-ins"></div>
   <div class="row" id="h-uc-row" style="display:none"><div class="row-t">Ближайшие платежи</div><div class="row-a" onclick="nav('recurring')">Все →</div></div>
@@ -264,6 +264,7 @@
   <div class="sg"><div class="sg-lbl">Счета</div><div class="slist">
     <div class="si" onclick="openAdjAcct('cash')"><div class="si-ic" style="background:#2c2c2e">💵</div><div class="si-t"><div class="si-n">Наличные</div><div class="si-s">Скорректировать баланс</div></div><div class="si-r"><div class="si-v" id="p-cash">0,00 €</div></div></div>
     <div class="si" onclick="openAdjAcct('bank')"><div class="si-ic" style="background:#152030">🏦</div><div class="si-t"><div class="si-n">Банковский счёт</div><div class="si-s">Скорректировать баланс</div></div><div class="si-r"><div class="si-v" id="p-bank">0,00 €</div></div></div>
+    <div class="si" onclick="openPiggy()"><div class="si-ic" style="background:#1a0533">🐷</div><div class="si-t"><div class="si-n">Секретная копилка</div><div class="si-s">Скрытые накопления</div></div><div class="si-r"><div class="si-v" id="p-piggy">0,00 €</div></div></div>
   </div></div>
   <div class="sg"><div class="sg-lbl">Настройки</div><div class="slist">
     <div class="si" style="cursor:default"><div class="si-ic" style="background:#0a2018">💱</div><div class="si-t"><div class="si-n">Валюта</div><div class="si-s">Символ и формат чисел</div></div><div class="si-r"><select id="set-cur" class="inp" style="width:auto;padding:9px 32px 9px 12px;font-size:14px"></select></div></div>
