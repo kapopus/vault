@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Vault</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Vault">
+<meta name="theme-color" content="#111113">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230D0D0D'/><text y='.9em' font-size='72' x='12'>💰</text></svg>">
+<link rel="manifest" href="data:application/json,{%22name%22:%22Vault%22,%22short_name%22:%22Vault%22,%22display%22:%22standalone%22,%22background_color%22:%22%23111113%22,%22theme_color%22:%22%23111113%22,%22start_url%22:%22./%22}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Satoshi:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+
+<!-- ═══════════════ HOME ═══════════════ -->
+<div class="sc on" id="sc-home">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div>
+        <div class="sub" id="h-greet">Доброе утро,</div>
+        <div class="hd" id="h-name">Денис</div>
+      </div>
+    </div>
+    <div class="tb-r">
+      <div class="ic-btn" id="notif-btn">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/></svg>
+        <div class="ndot" id="ndot" style="display:none"></div>
+      </div>
+      <div class="ic-btn" onclick="nav('profile')">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>
+      </div>
+    </div>
+  </div>
+  <div class="hero">
+    <div class="hero-lbl">Общий баланс</div>
+    <div class="hero-amt" id="h-bal">0,00 €</div>
+    <div class="hero-sub" id="h-date">обновлено сегодня</div>
+    <div class="hero-stats">
+      <div class="hst"><div class="hst-l">ДОХОДЫ</div><div class="hst-v g" id="h-inc">0,00 €</div></div>
+      <div class="hst"><div class="hst-l">РАСХОДЫ</div><div class="hst-v r" id="h-exp">0,00 €</div></div>
+    </div>
+  </div>
+  <div class="accts">
+    <div class="ac cash" onclick="openAdjAcct('cash')">
+      <div class="ac-lbl">Наличные</div>
+      <div class="ac-amt" id="h-cash">0,00 €</div>
+      <div class="ac-sub">💵 В кошельке</div>
+      <div class="ac-deco"></div>
+    </div>
+    <div class="ac bank" onclick="openAdjAcct('bank')">
+      <div class="ac-lbl">Банковский счёт</div>
+      <div class="ac-amt" id="h-bank">0,00 €</div>
+      <div class="ac-sub">🏦 Основной счёт</div>
+      <div class="ac-deco"></div>
+    </div>
+  </div>
+  <div class="row" style="margin-bottom:10px"><div class="row-t">Быстрые действия</div></div>
+  <div class="qa" id="h-qa" style="padding-right:22px"></div>
+  <div class="sec-btns">
+    <button class="sec-btn" onclick="nav('goals')"><span class="sec-btn-ico">🎯</span><span class="sec-btn-n">Цели</span><span class="sec-btn-badge" id="sb-goals-cnt"></span></button>
+    <button class="sec-btn" onclick="nav('recurring')"><span class="sec-btn-ico">🔁</span><span class="sec-btn-n">Платежи</span><span class="sec-btn-badge" id="sb-rec-cnt"></span></button>
+    <button class="sec-btn" onclick="nav('debts')"><span class="sec-btn-ico">🤝</span><span class="sec-btn-n">Долги</span><span class="sec-btn-badge" id="sb-debts-cnt"></span></button>
+  </div>
+  <div class="row"><div class="row-t">Аналитика</div><div class="row-a" onclick="nav('stats')">Подробнее →</div></div>
+  <div class="ins" id="h-ins"></div>
+  <div class="row" id="h-uc-row" style="display:none"><div class="row-t">Ближайшие платежи</div><div class="row-a" onclick="nav('recurring')">Все →</div></div>
+  <div class="upclist" id="h-upc" style="margin-bottom:20px"></div>
+  <div class="row"><div class="row-t">Последние</div><div class="row-a" onclick="nav('transactions')">Все →</div></div>
+  <div class="txl" id="h-txl" style="margin-bottom:16px"></div>
+</div>
+
+<!-- ═══════════════ TRANSACTIONS ═══════════════ -->
+<div class="sc" id="sc-transactions">
+  <div class="topbar" style="padding-bottom:16px">
+    <div class="hd">Операции</div>
+    <div class="tb-r"><div class="ic-btn" id="tx-sort-btn"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0-3.75-3.75M17.25 21 21 17.25"/></svg></div></div>
+  </div>
+  <div class="srch"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="m21 21-4.35-4.35"/></svg><input id="tx-q" placeholder="Поиск..."><span class="s-x" id="tx-x">×</span></div>
+  <div class="chips">
+    <button class="chip on" data-f="all">Все</button>
+    <button class="chip" data-f="expense">Расходы</button>
+    <button class="chip" data-f="income">Доходы</button>
+    <button class="chip" data-f="transfer">Переводы</button>
+    <button class="chip" data-f="cash">💵 Нал</button>
+    <button class="chip" data-f="bank">🏦 Банк</button>
+  </div>
+  <div class="txl" id="all-txl"></div>
+</div>
+
+<!-- ═══════════════ STATS ═══════════════ -->
+<div class="sc" id="sc-stats">
+  <div class="st-hero">
+    <div class="sth-p" id="stp-lbl">ЗА НЕДЕЛЮ</div>
+    <div class="sth-a" id="stp-tot">0,00 €</div>
+    <div class="sth-r">
+      <div class="sth-s"><div class="sth-sl">ДОХОДЫ</div><div class="sth-sv g" id="stp-inc">0,00 €</div></div>
+      <div class="sth-s"><div class="sth-sl">РАСХОДЫ</div><div class="sth-sv r" id="stp-exp">0,00 €</div></div>
+      <div class="sth-s"><div class="sth-sl">ОПЕРАЦИЙ</div><div class="sth-sv" id="stp-cnt">0</div></div>
+    </div>
+  </div>
+  <div class="ptabs">
+    <button class="pt on" data-p="week">Неделя</button>
+    <button class="pt" data-p="month">Месяц</button>
+    <button class="pt" data-p="3month">3 мес</button>
+    <button class="pt" data-p="year">Год</button>
+  </div>
+  <div class="sg4">
+    <div class="s4"><div class="s4-l">Ср./день</div><div class="s4-v" id="st-avg">0 €</div><div class="s4-s">расходов</div></div>
+    <div class="s4"><div class="s4-l">Макс. трата</div><div class="s4-v" id="st-max">0 €</div><div class="s4-s" id="st-maxs">—</div></div>
+    <div class="s4"><div class="s4-l">Сохранено</div><div class="s4-v" id="st-sav">0 €</div><div class="s4-s">доходы − расходы</div></div>
+    <div class="s4"><div class="s4-l">Ставка сбер.</div><div class="s4-v" id="st-rt">0%</div><div class="s4-s">от доходов</div></div>
+  </div>
+  <div class="cc"><div class="cc-h">📊 Доходы и расходы<div class="bleg" style="float:right"><div class="bli"><div class="bldot" style="background:var(--gr)"></div>Доходы</div><div class="bli"><div class="bldot" style="background:var(--ink)"></div>Расходы</div></div></div><div class="bars" id="st-bars"></div></div>
+  <div class="cc"><div class="cc-h">🎯 Расходы по категориям</div><div class="rw"><svg width="112" height="112" viewBox="0 0 112 112" id="ring-svg"></svg><div class="rleg" id="ring-leg"></div></div></div>
+  <div class="cc"><div class="cc-h">📈 Баланс во времени</div><svg class="lsvg" id="line-svg" viewBox="0 0 340 80" preserveAspectRatio="none"></svg></div>
+  <div class="row" style="margin-top:4px"><div class="row-t">Топ расходов</div></div>
+  <div class="txl" id="top-txl" style="margin-bottom:8px"></div>
+</div>
+
+<!-- ═══════════════ CATEGORIES ═══════════════ -->
+<div class="sc" id="sc-categories">
+  <div class="topbar" style="padding-bottom:16px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="back-btn" onclick="nav('home')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
+      <div class="hd">Категории</div>
+    </div>
+  </div>
+  <div class="cfrow">
+    <button class="cf on" data-ct="all">Все</button>
+    <button class="cf" data-ct="expense">Расходы</button>
+    <button class="cf" data-ct="income">Доходы</button>
+  </div>
+  <div class="catl" id="cat-list"></div>
+  <div class="add-row" onclick="openCatAdd()">
+    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+    Добавить категорию
+  </div>
+</div>
+
+<!-- ═══════════════ GOALS ═══════════════ -->
+<div class="sc" id="sc-goals">
+  <div class="topbar" style="padding-bottom:16px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="back-btn" onclick="nav('home')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
+      <div><div class="hd">Цели</div><div class="sub">Накопления и планы</div></div>
+    </div>
+    <div class="tb-r"><div class="ic-btn" onclick="openGoalM()"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg></div></div>
+  </div>
+  <div class="glist" id="goal-list"></div>
+  <div style="height:20px"></div>
+</div>
+
+<!-- ═══════════════ RECURRING ═══════════════ -->
+<div class="sc" id="sc-recurring">
+  <div class="topbar" style="padding-bottom:8px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="back-btn" onclick="nav('home')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
+      <div class="hd">Платежи</div>
+    </div>
+    <div class="tb-r"><div class="ic-btn" onclick="openRecM()"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg></div></div>
+  </div>
+  <div class="rh"><div><div class="rh-l">В месяц</div><div class="rh-a" id="rec-tot">0,00 €</div><div class="rh-s" id="rec-cnt">0 платежей</div></div><div onclick="openRecM()" style="cursor:pointer;opacity:.4"><svg width="44" height="44" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></div></div>
+  <div class="row"><div class="row-t">Все платежи</div><div class="row-a" onclick="openRecM()">+ Добавить</div></div>
+  <div class="recl" id="rec-list"></div>
+  <div style="height:20px"></div>
+</div>
+
+<!-- ═══════════════ TEMPLATES ═══════════════ -->
+<div class="sc" id="sc-templates">
+  <div class="topbar" style="padding-bottom:16px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="back-btn" onclick="nav('home')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
+      <div><div class="hd">Шаблоны</div><div class="sub">Быстрое добавление</div></div>
+    </div>
+    <div class="tb-r"><div class="ic-btn" onclick="openTmplAdd()"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg></div></div>
+  </div>
+  <div class="tgrid" id="tmpl-grid"></div>
+  <div class="add-tmpl" onclick="openTmplAdd()">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+    Создать шаблон
+  </div>
+  <div style="height:20px"></div>
+</div>
+
+<!-- ═══════════════ PROFILE ═══════════════ -->
+
+<div class="sc" id="sc-debts">
+  <div class="topbar" style="padding-bottom:0">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="back-btn" onclick="nav('home')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg></button>
+      <div><div class="hd">Долги</div><div class="sub">Кто кому должен</div></div>
+    </div>
+    <div class="ic-btn" onclick="openDebtAdd()"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg></div>
+  </div>
+  <div class="dbt-sum">
+    <div class="dbt-sum-col"><div class="dbt-sum-lbl">Я должен</div><div class="dbt-sum-amt owe" id="dsm-owe-val">0,00 €</div><div class="dbt-sum-cnt" id="dh-owe-cnt"></div></div>
+    <div class="dbt-sum-sep"></div>
+    <div class="dbt-sum-col" style="text-align:center"><div class="dbt-sum-lbl">Баланс</div><div class="dbt-sum-net" id="dh-net">+0,00 €</div></div>
+    <div class="dbt-sum-sep"></div>
+    <div class="dbt-sum-col" style="text-align:right"><div class="dbt-sum-lbl">Мне должны</div><div class="dbt-sum-amt owed" id="dsm-owed-val">0,00 €</div><div class="dbt-sum-cnt" id="dh-owed-cnt"></div></div>
+  </div>
+  <div class="cfrow" id="debt-tabs" style="padding:0 22px 14px">
+    <button class="cf on" data-dt="active">Активные</button>
+    <button class="cf" data-dt="owe">Я должен</button>
+    <button class="cf" data-dt="owed">Мне должны</button>
+    <button class="cf" data-dt="done">Закрытые</button>
+  </div>
+  <div class="debt-list" id="debt-list"></div>
+  <div style="height:20px"></div>
+</div>
+<div class="sc" id="sc-profile">
+  <div class="topbar" style="padding-bottom:16px"><div class="hd">Профиль</div></div>
+  <div class="prof-top">
+    <div class="av" id="p-av" style="position:relative">Д
+      <div class="av-ed" onclick="openEditProf()">
+        <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z"/></svg>
+      </div>
+    </div>
+    <div>
+      <div class="pt-n" id="p-name">Денис</div>
+      <div class="pt-e" id="p-email">denis@example.com</div>
+      <div class="pt-j" id="p-joined">Используется с сегодня</div>
+    </div>
+  </div>
+  <div class="psgrid">
+    <div class="ps"><div class="ps-v" id="ps-tx">0</div><div class="ps-l">Опер.</div></div>
+    <div class="ps"><div class="ps-v" id="ps-cat">0</div><div class="ps-l">Кат.</div></div>
+    <div class="ps"><div class="ps-v" id="ps-days">0</div><div class="ps-l">Дней</div></div>
+  </div>
+  <div class="streak-c" id="streak-c">
+    <div><div class="str-lbl">СЕРИЯ ДНЕЙ</div><div class="str-val" id="str-val">0</div><div class="str-sub" id="str-sub">Добавляй записи каждый день</div></div>
+    <div class="str-ico">🔥</div>
+  </div>
+  <div class="lev-c">
+    <div class="lev-top">
+      <div><div class="lev-t">⚡ Уровень</div><div class="lev-l" id="lev-name">🌱 Новичок</div></div>
+      <div class="lev-xp" id="lev-xp">0 XP</div>
+    </div>
+    <div class="lev-bar"><div class="lev-fill" id="lev-fill" style="width:0%"></div></div>
+    <div class="lev-sub" id="lev-sub">Добавь первую операцию</div>
+  </div>
+  <div class="row" style="margin-bottom:8px">
+    <div class="row-t">Достижения</div>
+    <div style="font-size:12px;color:var(--ink3);font-weight:700" id="ach-hdr-count">0/12</div>
+  </div>
+  <div class="achrow" id="ach-row"></div>
+  <div style="height:14px"></div>
+  <div class="sg"><div class="sg-lbl">Профиль</div><div class="slist">
+    <div class="si" onclick="openEditProf()"><div class="si-ic" style="background:#1a1830">✏️</div><div class="si-t"><div class="si-n">Редактировать</div><div class="si-s">Имя и email</div></div><div class="si-r"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></div></div>
+    <div class="si" onclick="openFSPanel('templates')"><div class="si-ic" style="background:#2a1f0a">⚡</div><div class="si-t"><div class="si-n">Шаблоны</div><div class="si-s" id="p-tmpl-cnt">0 шаблонов</div></div><div class="si-r"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></div></div>
+    <div class="si" onclick="openFSPanel('cats')"><div class="si-ic" style="background:#0a2018">🏷️</div><div class="si-t"><div class="si-n">Категории</div><div class="si-s" id="p-cats-cnt">0 категорий</div></div><div class="si-r"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></div></div>
+  </div></div>
+  <div class="sg"><div class="sg-lbl">Счета</div><div class="slist">
+    <div class="si" onclick="openAdjAcct('cash')"><div class="si-ic" style="background:#2c2c2e">💵</div><div class="si-t"><div class="si-n">Наличные</div><div class="si-s">Скорректировать баланс</div></div><div class="si-r"><div class="si-v" id="p-cash">0,00 €</div></div></div>
+    <div class="si" onclick="openAdjAcct('bank')"><div class="si-ic" style="background:#152030">🏦</div><div class="si-t"><div class="si-n">Банковский счёт</div><div class="si-s">Скорректировать баланс</div></div><div class="si-r"><div class="si-v" id="p-bank">0,00 €</div></div></div>
+  </div></div>
+  <div class="sg"><div class="sg-lbl">Данные</div><div class="slist">
+    <div class="si" onclick="backupData()"><div class="si-ic" style="background:#0a2018">🔐</div><div class="si-t"><div class="si-n">Резервная копия</div><div class="si-s">Скачать все данные (JSON)</div></div><div class="si-r"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></div></div>
+    <div class="si" onclick="document.getElementById('restore-file').click()"><div class="si-ic" style="background:#152030">📂</div><div class="si-t"><div class="si-n">Восстановить из копии</div><div class="si-s">Загрузить JSON-файл</div></div><div class="si-r"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></div></div>
+    <input type="file" id="restore-file" accept=".json" style="display:none" onchange="restoreData(this)">
+    <div class="si" onclick="clearAll()" style="cursor:pointer"><div class="si-ic" style="background:#2a0f10">🗑️</div><div class="si-t"><div class="si-n" style="color:var(--rd)">Удалить все данные</div><div class="si-s" style="color:var(--rd);opacity:.7">Нельзя отменить</div></div><div class="si-r"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg></div></div>
+  </div></div>
+
+  <div class="vault-footer">Vault · Данные хранятся локально</div>
+</div>
+
+<!-- ═══════════════ FULLSCREEN: TEMPLATES ═══════════════ -->
+<div class="fspanel" id="fsp-templates">
+  <div class="fsp-hdr">
+    <button class="fsp-back" onclick="closeFSPanel('templates')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg>
+    </button>
+    <div class="fsp-title">Шаблоны</div>
+    <div class="ic-btn" onclick="openTmplAdd()">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+    </div>
+  </div>
+  <div class="fsp-body">
+    <div id="fsp-tmpl-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 22px 8px"></div>
+    <div class="add-tmpl" onclick="openTmplAdd()" style="margin:0 22px">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+      Создать шаблон
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ FULLSCREEN: CATEGORIES ═══════════════ -->
+<div class="fspanel" id="fsp-cats">
+  <div class="fsp-hdr">
+    <button class="fsp-back" onclick="closeFSPanel('cats')">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg>
+    </button>
+    <div class="fsp-title">Категории</div>
+    <div class="ic-btn" onclick="openCatAdd()">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+    </div>
+  </div>
+  <div class="fsp-body">
+    <div class="cfrow" id="fsp-cfrow" style="padding:14px 22px 0;margin-bottom:0">
+      <button class="cf on" data-fct="all">Все</button>
+      <button class="cf" data-fct="expense">Расходы</button>
+      <button class="cf" data-fct="income">Доходы</button>
+    </div>
+    <div class="catl" id="fsp-cat-list" style="padding:14px 22px 0"></div>
+    <div class="add-row" onclick="openCatAdd()" style="padding:16px 22px">
+      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+      Добавить категорию
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ NAV ═══════════════ -->
+<nav>
+  <button class="nb on" data-s="home"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955a1.125 1.125 0 0 1 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg><div class="nb-l">Главная</div></button>
+  <button class="nb" data-s="transactions"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg><div class="nb-l">Операции</div></button>
+  <button class="nb-plus" id="open-add"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg></button>
+  <button class="nb" data-s="stats"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></svg><div class="nb-l">Статистика</div></button>
+  <button class="nb" data-s="profile"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg><div class="nb-l">Профиль</div></button>
+</nav>
+
+<!-- ═══════════════ NOTIF PANEL ═══════════════ -->
+<div class="np" id="notif-panel">
+  <div class="np-hdr">
+    <div style="font-family:'Clash Display',sans-serif;font-size:26px;font-weight:700;letter-spacing:-.5px">Уведомления</div>
+    <button class="np-close" onclick="closeNP()">×</button>
+  </div>
+  <div class="np-body" id="np-body"></div>
+</div>
+
+<!-- ═══════════════ MODALS ═══════════════ -->
+
+<!-- ADD TX -->
+<div class="ovl" id="m-add" onclick="if(event.target===this)closeM('m-add')">
+  <div class="mdl">
+    <div class="mhdl"></div>
+    <div class="mt">Новая операция</div>
+    <div class="type-sw" id="add-type-sw">
+      <button class="tsw on exp" data-t="expense">↓ Расход</button>
+      <button class="tsw inc" data-t="income">↑ Доход</button>
+      <button class="tsw tra" data-t="transfer">⇄ Перевод</button>
+    </div>
+    <div class="amt-blk"><div class="amt-sym">€</div><input class="amt-inp" id="add-amt" type="number" placeholder="0,00" inputmode="decimal"></div>
+    <div class="ff"><div class="fl">Описание</div><input class="inp" id="add-desc" placeholder="Например: Продукты, кофе..."></div>
+    <div class="ff"><div class="fl">Счёт</div>
+      <div class="ap" id="add-ap">
+        <button class="apb on" data-v="cash">💵 Наличные</button>
+        <button class="apb" data-v="bank">🏦 Банк</button>
+        <button class="apb" data-v="piggy" id="add-ap-piggy" style="display:none">🐷 Копилка</button>
+      </div>
+      <div id="add-transfer-to" style="display:none;margin-top:8px">
+        <div class="fl">Куда переводим</div>
+        <div class="ap" id="add-to-ap">
+          <button class="apb on" data-to="bank">🏦 Банк</button>
+          <button class="apb" data-to="cash">💵 Наличные</button>
+          <button class="apb" data-to="piggy">🐷 Копилка</button>
+        </div>
+      </div>
+    </div>
+    <div class="ff"><div class="fl">Категория</div><div class="cpkr" id="add-cat"></div></div>
+    <div class="ff"><div class="fl">Дата</div><input class="inp" id="add-date" type="date"></div>
+    <div class="ff" id="add-rep-wrap"><div class="fl">Повторение</div><select class="inp" id="add-rep"><option value="none">Не повторять</option><option value="daily">Ежедневно</option><option value="weekly">Еженедельно</option><option value="monthly">Ежемесячно</option><option value="yearly">Ежегодно</option></select></div>
+    <div class="ff"><div class="fl">Заметка</div><textarea class="inp" id="add-note" placeholder="Доп. информация..."></textarea></div>
+    <div id="add-tmpl-sc" style="margin-bottom:14px"></div>
+    <button class="btn btn-k" id="add-ok">Добавить</button>
+  </div>
+</div>
+
+<!-- TX DETAIL -->
+<div class="ovl" id="m-det" onclick="if(event.target===this)closeM('m-det')">
+  <div class="mdl">
+    <div class="mhdl"></div>
+    <div id="det-body"></div>
+    <div class="det-btns">
+      <button class="det-edit-btn" id="det-edit-btn">✏️ Изменить</button>
+      <button class="det-del" id="det-del">🗑 Удалить</button>
+    </div>
+    <button class="btn btn-gh" onclick="closeM('m-det')" style="margin-top:10px">Закрыть</button>
+  </div>
+</div>
+
+<!-- EDIT TX -->
+<div class="ovl" id="m-edit-tx" onclick="if(event.target===this)closeM('m-edit-tx')">
+  <div class="mdl">
+    <div class="mhdl"></div>
+    <div class="mt">Редактировать операцию</div>
+    <div class="type-sw" id="etx-type-sw">
+      <button class="tsw on exp" data-et="expense">↓ Расход</button>
+      <button class="tsw inc" data-et="income">↑ Доход</button>
+      <button class="tsw tra" data-et="transfer">⇄ Перевод</button>
+    </div>
+    <div class="amt-blk"><div class="amt-sym">€</div><input class="amt-inp" id="etx-amt" type="number" placeholder="0,00" inputmode="decimal"></div>
+    <div class="ff"><div class="fl">Описание</div><input class="inp" id="etx-desc" placeholder="Описание..."></div>
+    <div class="ff"><div class="fl">Счёт</div>
+      <div class="ap" id="etx-ap">
+        <button class="apb" data-ea="cash">💵 Наличные</button>
+        <button class="apb" data-ea="bank">🏦 Банк</button>
+      </div>
+    </div>
+    <div class="ff"><div class="fl">Категория</div><div class="cpkr" id="etx-cat"></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="ff"><div class="fl">Дата</div><input class="inp" id="etx-date" type="date"></div>
+    </div>
+    <div class="ff"><div class="fl">Заметка</div><textarea class="inp" id="etx-note" placeholder="Доп. информация..."></textarea></div>
+    <button class="btn btn-k" id="etx-ok">Сохранить изменения</button>
+  </div>
+</div>
+
+<!-- TEMPLATE PREVIEW / USE -->
+<div class="ovl" id="m-tuse" onclick="if(event.target===this)closeM('m-tuse')">
+  <div class="mdl">
+    <div class="mhdl"></div>
+    <div class="tprev">
+      <div class="tprev-ico" id="tuse-ico">⚡</div>
+      <div class="tprev-name" id="tuse-name">Шаблон</div>
+      <div class="tprev-amt" id="tuse-disp">0,00 €</div>
+    </div>
+    <div class="mt" style="font-size:18px;margin-bottom:16px">Подтверди операцию</div>
+    <div class="amt-blk"><div class="amt-sym">€</div><input class="amt-inp" id="tuse-amt" type="number" placeholder="0,00" inputmode="decimal"></div>
+    <div class="ff"><div class="fl">Описание</div><input class="inp" id="tuse-desc"></div>
+    <div class="ff"><div class="fl">Счёт</div><div class="ap" id="tuse-ap"><button class="apb on" data-tv="cash">💵 Наличные</button><button class="apb" data-tv="bank">🏦 Банк</button></div></div>
+    <div class="ff"><div class="fl">Дата</div><input class="inp" id="tuse-date" type="date"></div>
+    <div class="ff"><div class="fl">Заметка</div><input class="inp" id="tuse-note" placeholder="Необязательно..."></div>
+    <button class="btn btn-k" id="tuse-ok">Добавить операцию</button>
+  </div>
+</div>
+
+<!-- ADD TEMPLATE -->
+<div class="ovl" id="m-tadd" onclick="if(event.target===this)closeM('m-tadd')">
+  <div class="mdl">
+    <div class="mhdl"></div>
+    <div class="mt" id="tadd-title">Новый шаблон</div>
+    <div class="ms" id="tadd-sub">Сохрани частую операцию для быстрого добавления</div>
+    <div class="type-sw" id="tadd-type-sw">
+      <button class="tsw on exp" data-tt="expense">↓ Расход</button>
+      <button class="tsw inc" data-tt="income">↑ Доход</button>
+    </div>
+    <div class="ff"><div class="fl">Название</div><input class="inp" id="tadd-name" placeholder="Например: Утренний кофе"></div>
+    <div class="amt-blk"><div class="amt-sym">€</div><input class="amt-inp" id="tadd-amt" type="number" placeholder="0,00" inputmode="decimal"></div>
+    <div class="ff"><div class="fl">Счёт</div><div class="ap" id="tadd-ap"><button class="apb on" data-ta="cash">💵 Наличные</button><button class="apb" data-ta="bank">🏦 Банк</button></div></div>
+    <div class="ff"><div class="fl">Категория</div><div class="cpkr" id="tadd-cat"></div></div>
+    <div class="ff"><div class="fl">Иконка</div><div class="eg" id="tadd-emoji"></div></div>
+    <button class="btn btn-k" id="tadd-ok">Сохранить шаблон</button>
+  </div>
+</div>
+
+<!-- ADD CATEGORY -->
+<div class="ovl" id="m-cadd" onclick="if(event.target===this)closeM('m-cadd')">
+  <div class="mdl">
+    <div class="mhdl"></div>
+    <div class="mt">Новая категория</div>
+    <div class="ff"><div class="fl">Название</div><input class="inp" id="cadd-name" placeholder="Например: Спорт"></div>
+    <div class="ff"><div class="fl">Тип</div><select class="inp" id="cadd-type"><option value="expense">Расход</option><option value="income">Доход</option><option value="both">Оба</option></select></div>
+    <div class="ff"><div class="fl">Иконка</div><div class="eg" id="cadd-emoji"></div></div>
+    <div class="ff"><div class="fl">Цвет</div><div class="clrw" id="cadd-color"></div></div>
+    <button class="btn btn-k" id="cadd-ok">Создать</button>
+  </div>
+</div>
+
+<!-- EDIT CATEGORY -->
+<div class="ovl" id="m-cedit" onclick="if(event.target===this)closeM('m-cedit')">
+  <div class="mdl">
+    <div class="mhdl"></div>
+    <div class="mt">Редактировать категорию</div>
+    <div class="cu-info" id="cedit-info"></div>
+    <div class="ff"><div class="fl">Название</div><input class="inp" id="cedit-name"></div>
+    <div class="ff"><div class="fl">Тип</div><select class="inp" id="cedit-type"><option value="expense">Расход</option><option value="income">Доход</option><option value="both">Оба</option></select></div>
+    <div class="ff"><div class="fl">Иконка</div><div class="eg" id="cedit-emoji"></div></div>
+    <div class="ff"><div class="fl">Цвет</div><div class="clrw" id="cedit-color"></div></div>
+    <button class="btn btn-k" id="cedit-save" style="margin-bottom:10px">Сохранить изменения</button>
+    <button class="btn btn-r" id="cedit-del">🗑 Удалить категорию</button>
+  </div>
+</div>
+
+<!-- EDIT PROFILE -->
+<div class="ovl" id="m-prof" onclick="if(event.target===this)closeM('m-prof')">
+  <div class="mdl">
+    <div class="mhdl"></div>
+    <div class="mt">Профиль</div>
+    <div class="ff"><div class="fl">Имя</div><input class="inp" id="prof-name"></div>
+    <div class="ff"><div class="fl">Email</div><input class="inp" id="prof-email" type="email"></div>
+    <button class="btn btn-k" id="prof-ok">Сохранить</button>
+  </div>
+</div>
+
+<!-- GOAL ADD/EDIT -->
+<div class="ovl" id="m-gadd" onclick="if(event.target===this)closeM('m-gadd')">
+  <div class="mdl">
+    <div class="mhdl"></div>
+    <div class="mt" id="gadd-t">Новая цель</div>
+    <div class="ff"><div class="fl">Название</div><input class="inp" id="gadd-name" placeholder="Например: Отпуск в Италии"></div>
+    <div class="ff"><div class="fl">Иконка</div><div class="eg" id="gadd-emoji"></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="ff"><div class="fl">Цель (€)</div><input class="inp" id="gadd-target" type="number" placeholder="0,00" inputmode="decimal"></div>
+      <div class="ff"><div class="fl">Накоплено (€)</div><input class="inp" id="gadd-cur" type="number" placeholder="0,00" inputmode="decimal"></div>
+    </div>
+    <div class="ff"><div class="fl">Дедлайн</div><input class="inp" id="gadd-dl" type="date"></div>
+    <div class="ff"><div class="fl">Цвет</div><div class="clrw" id="gadd-color"></div></div>
+    <button class="btn btn-k" id="gadd-ok">Создать цель</button>
+  </div>
+</div>
+
+<!-- GOAL DETAIL -->
+<div class="ovl" id="m-gdet" onclick="if(event.target===this)closeM('m-gdet')">
+  <div class="mdl">
+    <div class="mhdl"></div>
+    <div id="gdet-body"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-g" id="gdet-add" style="flex:1;margin:0">+ Пополнить</button>
+      <button class="btn btn-gh" id="gdet-del" style="flex:0 0 54px;margin:0">🗑</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD RECURRING -->
+<div class="ovl" id="m-radd" onclick="if(event.target===this)closeM('m-radd')">
+  <div class="mdl">
+    <div class="mhdl"></div>
+    <div class="mt" id="radd-title">Регулярный платёж</div>
+    <div class="ff"><div class="fl">Название</div><input class="inp" id="radd-name" placeholder="Netflix, Аренда..."></div>
+    <div class="amt-blk"><div class="amt-sym">€</div><input class="amt-inp" id="radd-amt" type="number" placeholder="0,00" inputmode="decimal"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="ff"><div class="fl">Частота</div><select class="inp" id="radd-freq"><option value="monthly">Ежемесячно</option><option value="weekly">Еженедельно</option><option value="yearly">Ежегодно</option><option value="quarterly">Квартально</option></select></div>
+      <div class="ff"><div class="fl">День списания</div><input class="inp" id="radd-day" type="number" min="1" max="31" placeholder="1"></div>
+    </div>
+    <div class="ff"><div class="fl">Категория</div><div class="cpkr" id="radd-cat"></div></div>
+    <div class="ff"><div class="fl">Иконка</div><div class="eg" id="radd-emoji"></div></div>
+    <button class="btn btn-k" id="radd-ok">Добавить</button>
+  </div>
+</div>
+
+<!-- ADJUST ACCOUNT -->
+<div class="ovl" id="m-acct" onclick="if(event.target===this)closeM('m-acct')">
+  <div class="mdl">
+    <div class="mhdl"></div>
+    <div class="mt" id="acct-t">Скорректировать баланс</div>
+    <div class="ms">Введи текущий реальный баланс счёта</div>
+    <div class="amt-blk"><div class="amt-sym">€</div><input class="amt-inp" id="acct-inp" type="number" placeholder="0,00" inputmode="decimal"></div>
+    <button class="btn btn-k" id="acct-ok">Сохранить</button>
+  </div>
+</div>
+
+<!-- PIGGY BANK MODAL -->
+<div class="ovl" id="m-piggy" onclick="if(event.target===this)closeM('m-piggy')">
+  <div class="mdl">
+    <div class="mhdl"></div>
+    <div id="piggy-dot" style="display:none"></div><div class="piggy-hero">
+      <span class="piggy-emoji">🐷</span>
+      <div class="piggy-lbl">Секретная копилка</div>
+      <div class="piggy-bal" id="piggy-bal">0,00 €</div>
+      <div class="piggy-sub" id="piggy-sub">не включается в общий баланс</div>
+    </div>
+    <div class="piggy-actions">
+      <button class="piggy-act piggy-add" id="piggy-add-btn">+ Пополнить</button>
+      <button class="piggy-act piggy-take" id="piggy-take-btn">− Снять</button>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px" id="piggy-hist-lbl">История</div>
+    <div class="piggy-hist" id="piggy-hist"></div>
+    <button class="btn btn-gh" onclick="closeM('m-piggy')" style="margin-top:16px">Закрыть</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+</div>
+
+
+<div class="ovl" id="m-dadd" onclick="if(event.target===this)closeM('m-dadd')"><div class="mdl">
+  <div class="mhdl" onclick="closeM('m-dadd')"></div>
+  <div class="mt" id="dadd-title">Новый долг</div>
+  <div class="ff"><div class="fl">Направление</div><div class="type-sw" id="dadd-dir-sw"><button class="tsw on" data-dir="owe">Я должен</button><button class="tsw" data-dir="owed">Мне должны</button></div></div>
+  <div class="ff"><div class="fl">Имя</div><input class="inp" id="dadd-name" placeholder="Кому / от кого" type="text"></div>
+  <div class="ff"><div class="fl">Сумма</div><div class="amt-blk"><div class="amt-sym">€</div><input class="amt-inp" id="dadd-amt" type="number" placeholder="0,00" inputmode="decimal"></div></div>
+  <div class="ff"><div class="fl">Описание</div><input class="inp" id="dadd-desc" placeholder="За что..." type="text"></div>
+  <div class="ff"><div class="fl">Срок</div><input class="inp" id="dadd-date" type="date"></div>
+  <input type="hidden" id="dadd-id">
+  <button class="btn btn-k" id="dadd-ok">Сохранить</button>
+</div></div>
+<div class="ovl" id="m-dpay" onclick="if(event.target===this)closeM('m-dpay')"><div class="mdl">
+  <div class="mhdl" onclick="closeM('m-dpay')"></div>
+  <div class="mt">Погасить долг</div>
+  <div id="dpay-name-lbl" style="font-size:15px;font-weight:600;margin-bottom:4px;color:var(--ink)"></div>
+  <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--ink3);margin-bottom:12px"><span>Выплачено: <b id="dpay-paid-lbl">0 €</b></span><span>Осталось: <b id="dpay-left-lbl">0 €</b></span></div>
+  <div style="height:6px;border-radius:3px;overflow:hidden;margin-bottom:16px;background:var(--p3)"><div id="dpay-progress-bar" style="height:100%;background:var(--gr);transition:width .4s;border-radius:3px"></div></div>
+  <div class="ff"><div class="fl">Сумма погашения</div><div class="amt-blk"><div class="amt-sym">€</div><input class="amt-inp" id="dpay-amt" type="number" placeholder="0,00" inputmode="decimal"></div></div>
+  <div class="ff"><div class="fl">Заметка</div><input class="inp" id="dpay-note" placeholder="Комментарий..." type="text"></div>
+  <div style="display:flex;gap:8px"><button class="btn btn-k" id="dpay-ok" style="flex:2">Погасить</button><button class="btn btn-gh" id="dpay-full" style="flex:1">Всю сумму</button></div>
+  <input type="hidden" id="dpay-id">
+</div></div>
+
+<script src="app.js"></script>
+</body>
+</html>
