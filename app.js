@@ -106,7 +106,7 @@ function parseState(raw) {
       settings: p.settings || {},
       notifs: p.notifs || [],
       debts: p.debts || [],
-      piggy: p.piggy || { balance: 0, history: [] },
+      piggy: { balance: 0, history: [], pin: null, ...(p.piggy || {}) },
       createdAt: p.createdAt || new Date().toISOString(),
     };
   } catch(e) { return null; }
@@ -132,7 +132,7 @@ function getDefaultState() {
     goals: [], recurring: [], templates: [],
     notifications: false, settings: {}, notifs: [],
     debts: [],
-    piggy: { balance: 0, history: [] },
+    piggy: { balance: 0, history: [], pin: null },
     createdAt: new Date().toISOString(),
   };
 }
@@ -441,8 +441,11 @@ function renderHome() {
   const inc = S.transactions.filter(t => t.type === 'income').reduce((a, t) => a + t.amount, 0);
   const exp = S.transactions.filter(t => t.type === 'expense').reduce((a, t) => a + t.amount, 0);
   const cash = acctBal('cash'), bank = acctBal('bank');
+  const piggy = (S.piggy && S.piggy.balance) || 0;
 
-  document.getElementById('h-bal').textContent = fmt(cash + bank) + ' €';
+  // Общий баланс включает деньги в копилке (они тоже твои), но банк уже
+  // уменьшен на сумму, отложенную в копилку, поэтому двойного счёта нет.
+  document.getElementById('h-bal').textContent = fmt(cash + bank + piggy) + ' €';
   document.getElementById('h-inc').textContent = fmt(inc) + ' €';
   document.getElementById('h-exp').textContent = fmt(exp) + ' €';
   document.getElementById('h-cash').textContent = fmt(cash) + ' €';
@@ -646,16 +649,6 @@ function updateTransferUI() {
   // Hide category for transfers
   const catFF = document.getElementById('add-cat')?.closest('.ff');
   if (catFF) catFF.style.display = isTransfer ? 'none' : '';
-  // Показываем/скрываем Копилку в "Откуда"
-  const piggyFromBtn = document.getElementById('add-ap-piggy');
-  if (piggyFromBtn) {
-    piggyFromBtn.style.display = isTransfer ? '' : 'none';
-    // Если ушли из режима перевода, нельзя оставлять копилку выбранной как счёт
-    if (!isTransfer && piggyFromBtn.classList.contains('on')) {
-      piggyFromBtn.classList.remove('on');
-      document.querySelector('#add-ap [data-v="cash"]')?.classList.add('on');
-    }
-  }
   if (isTransfer) updateTransferToOptions();
 }
 
@@ -706,34 +699,7 @@ document.getElementById('add-ok').addEventListener('click', () => {
     const toAcct = getAcctPicker('add-to-ap', 'to');
     const fromAcct = account; // account = getAcctPicker('add-ap', 'v')
 
-    if (!S.piggy) S.piggy = { balance: 0, history: [] };
-
-    if (fromAcct === 'piggy') {
-      // Из копилки → на счёт
-      if (amount > S.piggy.balance) { toast(`⚠️ В копилке только ${fmt(S.piggy.balance)} €`); return; }
-      S.piggy.balance -= amount;
-      S.piggy.history.push({ amount: -amount, desc: desc || `→ ${toAcct === 'cash' ? 'Наличные' : 'Банк'}`, date });
-      S.transactions.push({ id: uid(), type: 'income', amount, desc: desc || 'Из копилки', note, date, account: toAcct, category: 'other', isRec: false, fromPiggy: true });
-      save(); closeM('m-add'); renderHome();
-      if (curSc === 'transactions') renderTx();
-      playAddSound();
-      toast(`🐷 ${fmt(amount)} € переведено из копилки`);
-      return;
-    }
-
-    if (toAcct === 'piggy') {
-      // Со счёта → в копилку
-      S.piggy.balance += amount;
-      S.piggy.history.push({ amount, desc: desc || `← ${fromAcct === 'cash' ? 'Наличные' : 'Банк'}`, date });
-      S.transactions.push({ id: uid(), type: 'expense', amount, desc: desc || 'Перевод в копилку', note, date, account: fromAcct, category: 'other', isRec: false, toPiggy: true });
-      save(); closeM('m-add'); renderHome();
-      if (curSc === 'transactions') renderTx();
-      playAddSound();
-      toast('🐷 ' + fmt(amount) + ' €' + ' переведено в копилку');
-      return;
-    }
-
-    // Обычный перевод счёт → счёт
+    // Обычный перевод счёт → счёт (копилка пополняется только из её экрана)
     S.transactions.push({ id: uid(), type: 'transfer', amount, desc: desc || 'Перевод', note, date, account: fromAcct, toAcct, category, isRec: false });
     save(); closeM('m-add'); autoNotifs(); renderHome();
     if (curSc === 'transactions') renderTx();
@@ -1557,8 +1523,9 @@ function renderProfile() {
   document.getElementById('ps-days').textContent = dates.length ? Math.floor((new Date() - new Date(Math.min(...dates))) / 86400000) + 1 : 0;
   document.getElementById('p-cash').textContent = fmt(acctBal('cash')) + ' €';
   document.getElementById('p-bank').textContent = fmt(acctBal('bank')) + ' €';
+  // Баланс копилки скрыт — виден только после ввода PIN внутри неё
   const pPiggy = document.getElementById('p-piggy');
-  if (pPiggy) pPiggy.textContent = fmt((S.piggy && S.piggy.balance) || 0) + ' €';
+  if (pPiggy) pPiggy.textContent = '🔒 ••••';
   // Streak
   const streak = calcStreak();
   document.getElementById('str-val').textContent = streak;
@@ -1792,15 +1759,60 @@ function clearAll() {
 
 
 function openPiggy() {
-  renderPiggy();
-  openM('m-piggy');
+  if (!S.piggy) S.piggy = { balance: 0, history: [], pin: null };
+  if (!S.piggy.pin) openPinPad('set');
+  else openPinPad('enter');
+}
+
+// PIN-клавиатура для входа в копилку (3 цифры)
+function openPinPad(mode) {
+  const isSet = mode === 'set';
+  const { ov, close } = openSheet(`
+    <div class="cdlg-t" style="text-align:center">${isSet ? 'Придумайте PIN' : 'Введите PIN'}</div>
+    <div class="cdlg-s" style="text-align:center">${isSet ? 'Код из 3 цифр для входа в копилку' : 'Код из 3 цифр'}</div>
+    <div class="pin-dots" id="pin-dots"><span></span><span></span><span></span></div>
+    <div class="pin-pad" id="pin-pad">
+      ${[1,2,3,4,5,6,7,8,9].map(n => `<button class="pin-key" type="button" data-d="${n}">${n}</button>`).join('')}
+      <span></span>
+      <button class="pin-key" type="button" data-d="0">0</button>
+      <button class="pin-key pin-back" type="button" data-back="1">⌫</button>
+    </div>
+  `);
+  let buf = '';
+  const dotsWrap = ov.querySelector('#pin-dots');
+  const dots = dotsWrap.querySelectorAll('span');
+  const render = () => dots.forEach((d, i) => d.classList.toggle('on', i < buf.length));
+  ov.querySelector('#pin-pad').addEventListener('click', e => {
+    const k = e.target.closest('.pin-key');
+    if (!k) return;
+    if (k.dataset.back) { buf = buf.slice(0, -1); render(); return; }
+    if (buf.length >= 3) return;
+    buf += k.dataset.d;
+    render();
+    if (buf.length === 3) setTimeout(submit, 140);
+  });
+  function submit() {
+    if (isSet) {
+      S.piggy.pin = buf;
+      save(); close();
+      toast('🔒 PIN установлен');
+      renderPiggy(); openM('m-piggy');
+    } else if (buf === S.piggy.pin) {
+      close();
+      renderPiggy(); openM('m-piggy');
+    } else {
+      dotsWrap.classList.add('shake');
+      setTimeout(() => dotsWrap.classList.remove('shake'), 400);
+      buf = ''; render();
+      toast('❌ Неверный PIN');
+    }
+  }
 }
 
 function renderPiggy() {
   const p = S.piggy || { balance: 0, history: [] };
   document.getElementById('piggy-bal').textContent = fmt(p.balance) + ' €';
-  document.getElementById('piggy-sub').textContent =
-    p.balance > 0 ? 'скрыто от общего баланса 🔒' : 'не включается в общий баланс';
+  document.getElementById('piggy-sub').textContent = '🔒 защищено PIN · связано с банком';
 
   // Dot on button
   const dot = document.getElementById('piggy-dot');
@@ -1852,18 +1864,27 @@ function confirmPiggy(isAdd, btn) {
     setTimeout(() => document.getElementById('pgamt').style.color = '', 600);
     return;
   }
-  if (!S.piggy) S.piggy = { balance: 0, history: [] };
-  if (!isAdd && amt > S.piggy.balance) { toast('⚠️ Недостаточно средств в копилке'); return; }
-  S.piggy.balance += isAdd ? amt : -amt;
+  if (!S.piggy) S.piggy = { balance: 0, history: [], pin: null };
+  // Копилка связана с банком: пополнение списывает с банка, снятие возвращает.
+  if (isAdd) {
+    if (amt > acctBal('bank')) { toast('⚠️ На банке только ' + fmt(acctBal('bank')) + ' €'); return; }
+    S.piggy.balance += amt;
+    S.accounts.bank = (S.accounts.bank || 0) - amt;
+  } else {
+    if (amt > S.piggy.balance) { toast('⚠️ В копилке только ' + fmt(S.piggy.balance) + ' €'); return; }
+    S.piggy.balance -= amt;
+    S.accounts.bank = (S.accounts.bank || 0) + amt;
+  }
   S.piggy.balance = Math.max(0, S.piggy.balance);
   S.piggy.history.push({ amount: isAdd ? amt : -amt, desc, date: today() });
   if (S.piggy.history.length > 50) S.piggy.history = S.piggy.history.slice(-50);
   save();
   btn.closest('.cdlg-ov')?.remove();
   renderPiggy();
+  renderHome();
   if (curSc === 'profile') renderProfile();
   launchConfetti();
-  toast(isAdd ? `🐷 +${fmt(amt)} € в копилку!` : `💸 −${fmt(amt)} € из копилки`);
+  toast(isAdd ? `🐷 +${fmt(amt)} € отложено из банка` : `🏦 −${fmt(amt)} € возвращено на банк`);
 }
 
 document.getElementById('piggy-add-btn').addEventListener('click', () => piggyTransaction('add'));

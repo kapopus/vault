@@ -808,3 +808,12 @@ mark{background:rgba(240,144,10,.35)}
 .cdlg-cancel{background:var(--p2);color:var(--ink3)}
 .cdlg-ok{background:var(--ink);color:var(--p)}
 .cdlg-ok.danger{background:var(--rd);color:#fff}
+
+/* ── PIN PAD ── */
+.pin-dots{display:flex;justify-content:center;gap:16px;margin:18px 0 24px}
+.pin-dots span{width:14px;height:14px;border-radius:50%;border:2px solid var(--bd2);transition:.15s}
+.pin-dots span.on{background:var(--ink);border-color:var(--ink)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:280px;margin:0 auto}
+.pin-key{height:58px;border-radius:16px;border:none;background:var(--p2);color:var(--ink);font-family:'Clash Display',sans-serif;font-size:24px;font-weight:600;cursor:pointer;transition:.12s}
+.pin-key:active{background:var(--p3);transform:scale(.93)}
+.pin-back{font-size:20px;color:var(--ink3)}
