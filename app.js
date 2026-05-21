@@ -441,11 +441,10 @@ function renderHome() {
   const inc = S.transactions.filter(t => t.type === 'income').reduce((a, t) => a + t.amount, 0);
   const exp = S.transactions.filter(t => t.type === 'expense').reduce((a, t) => a + t.amount, 0);
   const cash = acctBal('cash'), bank = acctBal('bank');
-  const piggy = (S.piggy && S.piggy.balance) || 0;
 
-  // Общий баланс включает деньги в копилке (они тоже твои), но банк уже
-  // уменьшен на сумму, отложенную в копилку, поэтому двойного счёта нет.
-  document.getElementById('h-bal').textContent = fmt(cash + bank + piggy) + ' €';
+  // Копилка — это спрятанные деньги: они списаны с банка и НЕ входят
+  // в общий баланс и статистику. Поэтому считаем только наличные + банк.
+  document.getElementById('h-bal').textContent = fmt(cash + bank) + ' €';
   document.getElementById('h-inc').textContent = fmt(inc) + ' €';
   document.getElementById('h-exp').textContent = fmt(exp) + ' €';
   document.getElementById('h-cash').textContent = fmt(cash) + ' €';
@@ -1812,7 +1811,7 @@ function openPinPad(mode) {
 function renderPiggy() {
   const p = S.piggy || { balance: 0, history: [] };
   document.getElementById('piggy-bal').textContent = fmt(p.balance) + ' €';
-  document.getElementById('piggy-sub').textContent = '🔒 защищено PIN · связано с банком';
+  document.getElementById('piggy-sub').textContent = '🔒 спрятано от баланса · PIN';
 
   // Dot on button
   const dot = document.getElementById('piggy-dot');
