@@ -202,6 +202,22 @@ function confirmSheet({ title, text = '', okText = 'Удалить', danger = tr
   return ov;
 }
 
+// Универсальный нижний лист с произвольным содержимым (для форм-попапов).
+// Единый стиль с модалками: скруглённый лист, крестик закрытия, без «ручки».
+function openSheet(innerHTML) {
+  const ov = document.createElement('div');
+  ov.className = 'cdlg-ov';
+  ov.innerHTML = `<div class="cdlg" style="position:relative">
+    <button class="m-close" type="button" aria-label="Закрыть">&times;</button>
+    ${innerHTML}
+  </div>`;
+  document.body.appendChild(ov);
+  const close = () => ov.remove();
+  ov.addEventListener('click', e => { if (e.target === ov) close(); });
+  ov.querySelector('.m-close').addEventListener('click', close);
+  return { ov, close };
+}
+
 // Close modal on overlay tap
 ['m-add','m-det','m-edit-tx','m-tuse','m-tadd','m-cadd','m-cedit','m-prof','m-gadd','m-gdet','m-radd','m-acct','m-piggy'].forEach(id => {
   document.getElementById(id).addEventListener('click', e => { if (e.target === document.getElementById(id)) closeM(id); });
@@ -1088,20 +1104,12 @@ function renderGoals() {
 function openGoalContrib(gid) {
   const g = S.goals.find(x => x.id === gid);
   if (!g) return;
-  const ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(14px);z-index:9000;display:flex;align-items:flex-end;justify-content:center';
-  ov.innerHTML = `<div style="width:100%;max-width:393px;background:var(--p);border-radius:28px 28px 0 0;padding:24px 22px 48px;animation:mUp .28s cubic-bezier(.22,1,.36,1)">
-    <div style="width:36px;height:4px;background:var(--ink4);border-radius:2px;margin:0 auto 20px;opacity:.4"></div>
-    <div style="font-family:'Clash Display',sans-serif;font-size:20px;font-weight:700;margin-bottom:4px;color:var(--ink)">${g.icon || '🎯'} ${g.name}</div>
-    <div style="font-size:13px;color:var(--ink3);margin-bottom:18px">Накоплено ${fmt(g.current)} € из ${fmt(g.target)} €</div>
-    <div class="amt-blk" style="margin-bottom:18px"><div class="amt-sym">€</div><input class="amt-inp" id="gc-amt-input" type="number" placeholder="0,00" inputmode="decimal" style="background:transparent;width:100%"></div>
-    <div style="display:flex;gap:10px">
-      <button style="flex:1;padding:14px;border-radius:14px;border:none;background:var(--p2);color:var(--ink3);font-family:'Satoshi',sans-serif;font-size:14px;font-weight:700;cursor:pointer" onclick="this.closest('[style*=fixed]').remove()">Отмена</button>
-      <button style="flex:1;padding:14px;border-radius:14px;border:none;background:var(--gr);color:#fff;font-family:'Clash Display',sans-serif;font-size:16px;font-weight:700;cursor:pointer" id="gc-ok">Пополнить</button>
-    </div>
-  </div>`;
-  document.body.appendChild(ov);
-  ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+  const { ov, close } = openSheet(`
+    <div class="cdlg-t">${g.icon || '🎯'} ${g.name}</div>
+    <div class="cdlg-s">Накоплено ${fmt(g.current)} € из ${fmt(g.target)} €</div>
+    <div class="amt-blk"><div class="amt-sym">€</div><input class="amt-inp" id="gc-amt-input" type="number" placeholder="0,00" inputmode="decimal"></div>
+    <button class="btn btn-g" id="gc-ok" style="margin-top:4px">Пополнить</button>
+  `);
   setTimeout(() => document.getElementById('gc-amt-input')?.focus(), 100);
   document.getElementById('gc-ok').onclick = () => {
     const amt = parseFloat(document.getElementById('gc-amt-input').value);
@@ -1109,7 +1117,7 @@ function openGoalContrib(gid) {
     g.current += amt;
     if (!g.contributions) g.contributions = [];
     g.contributions.push({ amount: amt, date: today() });
-    save(); ov.remove(); renderGoals(); autoNotifs();
+    save(); close(); renderGoals(); autoNotifs();
     if (g.current >= g.target) { launchConfetti(); toast('🎉 Цель достигнута!'); }
     else toast('✅ Пополнено на ' + fmt(amt) + ' €');
   };
@@ -1736,29 +1744,19 @@ function restoreData(input) {
     try {
       const parsed = parseState(e.target.result);
       if (!parsed) { toast('❌ Неверный формат файла'); return; }
-      const ov = document.createElement('div');
-      ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(14px);z-index:9000;display:flex;align-items:flex-end;justify-content:center';
-      ov.innerHTML = `<div style="width:100%;max-width:393px;background:var(--p);border-radius:28px 28px 0 0;padding:28px 24px 48px;animation:mUp .3s cubic-bezier(.22,1,.36,1)">
-        <div style="width:36px;height:4px;background:var(--ink4);border-radius:2px;margin:0 auto 22px;opacity:.4"></div>
-        <div style="font-size:32px;text-align:center;margin-bottom:12px">📂</div>
-        <div style="font-family:'Clash Display',sans-serif;font-size:20px;font-weight:700;text-align:center;margin-bottom:8px;color:var(--ink)">Восстановить данные?</div>
-        <div style="font-size:14px;color:var(--ink3);text-align:center;line-height:1.5;margin-bottom:24px">
-          ${parsed.transactions.length} операций · ${parsed.goals.length} целей<br>
-          <strong style="color:var(--am)">Текущие данные будут заменены</strong>
-        </div>
-        <button id="restore-ok" style="width:100%;padding:15px;border-radius:14px;border:none;background:var(--bl);color:#fff;font-family:'Clash Display',sans-serif;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px">Восстановить</button>
-        <button onclick="this.closest('[style*=fixed]').remove()" style="width:100%;padding:15px;border-radius:14px;border:none;background:var(--p2);color:var(--ink3);font-family:'Satoshi',sans-serif;font-size:15px;font-weight:700;cursor:pointer">Отмена</button>
-      </div>`;
-      document.body.appendChild(ov);
-      ov.addEventListener('click', ev => { if (ev.target === ov) ov.remove(); });
-      document.getElementById('restore-ok').onclick = () => {
-        S = parsed;
-        save();
-        ov.remove();
-        renderHome();
-        initSettings();
-        toast(`✅ Восстановлено ${S.transactions.length} операций`);
-      };
+      confirmSheet({
+        title: '📂 Восстановить данные?',
+        text: `${parsed.transactions.length} операций · ${parsed.goals.length} целей<br><strong style="color:var(--am)">Текущие данные будут заменены</strong>`,
+        okText: 'Восстановить',
+        danger: false,
+        onOk: () => {
+          S = parsed;
+          save();
+          renderHome();
+          initSettings();
+          toast(`✅ Восстановлено ${S.transactions.length} операций`);
+        }
+      });
     } catch(err) {
       toast('❌ Ошибка при чтении файла');
     }
@@ -1768,38 +1766,28 @@ function restoreData(input) {
 }
 
 function clearAll() {
-  // Кастомный попап — native confirm() блокируется в Safari PWA
-  const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(14px);z-index:9000;display:flex;align-items:flex-end;justify-content:center';
-  overlay.innerHTML = `
-    <div style="width:100%;max-width:393px;background:var(--p);border-radius:28px 28px 0 0;padding:28px 24px 48px;animation:mUp .3s cubic-bezier(.22,1,.36,1)">
-      <div style="width:36px;height:4px;background:var(--ink4);border-radius:2px;margin:0 auto 24px;opacity:.4"></div>
-      <div style="font-size:40px;text-align:center;margin-bottom:14px">🗑️</div>
-      <div style="font-family:'Clash Display',sans-serif;font-size:22px;font-weight:700;letter-spacing:-.4px;text-align:center;margin-bottom:8px">Удалить все данные?</div>
-      <div style="font-size:14px;color:var(--ink3);text-align:center;line-height:1.5;margin-bottom:28px">Транзакции, цели, шаблоны, платежи и копилка — всё будет удалено.<br><strong style="color:var(--rd)">Это нельзя отменить.</strong></div>
-      <button id="clearall-confirm" style="width:100%;padding:16px;border-radius:16px;border:none;background:var(--rd);color:#fff;font-family:'Clash Display',sans-serif;font-size:17px;font-weight:700;cursor:pointer;margin-bottom:10px">Да, удалить всё</button>
-      <button id="clearall-cancel" style="width:100%;padding:16px;border-radius:16px;border:none;background:var(--p2);color:var(--ink3);font-family:'Satoshi',sans-serif;font-size:15px;font-weight:700;cursor:pointer">Отмена</button>
-    </div>`;
-  document.body.appendChild(overlay);
-  document.getElementById('clearall-cancel').onclick = () => overlay.remove();
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
-  document.getElementById('clearall-confirm').onclick = () => {
-    overlay.remove();
-    S.transactions = [];
-    S.goals = [];
-    S.recurring = [];
-    S.templates = [];
-    S.notifs = [];
-    S.accounts = { cash: 0, bank: 0 };
-    S.debts = [];
-    S.piggy = { balance: 0, history: [] };
-    const data = JSON.stringify(S);
-    localStorage.setItem(KEY, data);
-    saveToIDB(data);
-    nav('home');
-    renderHome();
-    toast('🗑 Все данные удалены');
-  };
+  confirmSheet({
+    title: '🗑️ Удалить все данные?',
+    text: 'Транзакции, цели, шаблоны, платежи и копилка — всё будет удалено.<br><strong style="color:var(--rd)">Это нельзя отменить.</strong>',
+    okText: 'Да, удалить всё',
+    danger: true,
+    onOk: () => {
+      S.transactions = [];
+      S.goals = [];
+      S.recurring = [];
+      S.templates = [];
+      S.notifs = [];
+      S.accounts = { cash: 0, bank: 0 };
+      S.debts = [];
+      S.piggy = { balance: 0, history: [] };
+      const data = JSON.stringify(S);
+      localStorage.setItem(KEY, data);
+      saveToIDB(data);
+      nav('home');
+      renderHome();
+      toast('🗑 Все данные удалены');
+    }
+  });
 }
 
 
@@ -1848,26 +1836,13 @@ function piggyTransaction(type) {
   const isAdd = type === 'add';
   const title = isAdd ? 'Пополнить копилку' : 'Снять из копилки';
   const p = S.piggy || { balance: 0, history: [] };
-
-  // Показываем мини-форму поверх модалки
-  const d = document.createElement('div');
-  d.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(10px);z-index:9000;display:flex;align-items:flex-end;justify-content:center';
-  d.innerHTML = `<div style="width:100%;max-width:393px;background:var(--p);border-radius:28px 28px 0 0;padding:22px 22px 44px;animation:mUp .28s cubic-bezier(.22,1,.36,1)">
-    <div style="width:36px;height:4px;background:var(--ink4);border-radius:2px;margin:0 auto 20px;opacity:.4"></div>
-    <div style="font-family:'Clash Display',sans-serif;font-size:22px;font-weight:700;margin-bottom:16px">${title}</div>
-    <div style="background:var(--p2);border-radius:18px;padding:16px 20px;margin-bottom:14px;border:2px solid transparent" id="pgamt-blk">
-      <div style="font-size:20px;font-family:'Clash Display',sans-serif;color:var(--ink4);margin-bottom:2px">€</div>
-      <input id="pgamt" type="number" inputmode="decimal" placeholder="0,00" style="width:100%;background:none;border:none;outline:none;font-family:'Clash Display',sans-serif;font-size:44px;font-weight:700;letter-spacing:-2px;color:var(--ink)">
-    </div>
-    <div style="margin-bottom:14px">
-      <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--ink3);margin-bottom:6px">Описание</div>
-      <input id="pgdesc" class="inp" placeholder="Например: на отпуск...">
-    </div>
+  openSheet(`
+    <div class="cdlg-t">${title}</div>
+    <div class="amt-blk"><div class="amt-sym">€</div><input id="pgamt" class="amt-inp" type="number" inputmode="decimal" placeholder="0,00"></div>
+    <div class="ff"><div class="fl">Описание</div><input id="pgdesc" class="inp" placeholder="Например: на отпуск..."></div>
     ${!isAdd && p.balance > 0 ? `<div style="font-size:12px;color:var(--ink3);font-weight:500;margin-bottom:14px">Доступно: ${fmt(p.balance)} €</div>` : ''}
-    <button onclick="confirmPiggy(${isAdd}, this)" style="width:100%;padding:15px;background:${isAdd ? '#8B5CF6' : 'var(--ink)'};color:#fff;border:none;border-radius:14px;font-family:'Clash Display',sans-serif;font-size:17px;font-weight:700;cursor:pointer">${isAdd ? '+ Пополнить' : '− Снять'}</button>
-  </div>`;
-  d.addEventListener('click', e => { if (e.target === d) d.remove(); });
-  document.body.appendChild(d);
+    <button class="btn ${isAdd ? '' : 'btn-gh'}" onclick="confirmPiggy(${isAdd}, this)" style="margin-top:4px${isAdd ? ';background:#8B5CF6;color:#fff' : ''}">${isAdd ? '+ Пополнить' : '− Снять'}</button>
+  `);
   setTimeout(() => document.getElementById('pgamt')?.focus(), 300);
 }
 
@@ -1886,7 +1861,7 @@ function confirmPiggy(isAdd, btn) {
   S.piggy.history.push({ amount: isAdd ? amt : -amt, desc, date: today() });
   if (S.piggy.history.length > 50) S.piggy.history = S.piggy.history.slice(-50);
   save();
-  btn.closest('div[style*=fixed]').remove();
+  btn.closest('.cdlg-ov')?.remove();
   renderPiggy();
   if (curSc === 'profile') renderProfile();
   launchConfetti();

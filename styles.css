@@ -93,7 +93,7 @@ textarea.inp{resize:none;height:78px;line-height:1.5}
 /* MODALS */
 .ovl{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:400;display:none;align-items:flex-end;justify-content:center}
 .ovl.on{display:flex}
-.mdl{width:100%;max-width:393px;background:var(--p);border-radius:32px 32px 0 0;padding:22px 22px calc(44px + env(safe-area-inset-bottom, 0px));animation:mUp .3s cubic-bezier(.22,1,.36,1);max-height:94dvh;overflow-y:auto;position:relative}
+.mdl{width:100%;max-width:393px;background:var(--p);border-radius:32px 32px 0 0;padding:22px 22px calc(44px + env(safe-area-inset-bottom, 0px));animation:mUp .3s cubic-bezier(.22,1,.36,1);max-height:94dvh;overflow-y:auto;overflow-x:hidden;position:relative}
 .mdl::-webkit-scrollbar{display:none}
 @keyframes mUp{from{transform:translateY(100%);opacity:.8}to{transform:none;opacity:1}}
 .mhdl{display:none}
@@ -799,7 +799,7 @@ mark{background:rgba(240,144,10,.35)}
 
 /* ── CONFIRM DIALOG (bottom sheet) ── */
 .cdlg-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:9000;display:flex;align-items:flex-end;justify-content:center}
-.cdlg{width:100%;max-width:393px;background:var(--p);border-radius:28px 28px 0 0;padding:24px 22px calc(40px + env(safe-area-inset-bottom,0px));animation:mUp .28s cubic-bezier(.22,1,.36,1)}
+.cdlg{width:100%;max-width:393px;background:var(--p);border-radius:28px 28px 0 0;padding:24px 22px calc(40px + env(safe-area-inset-bottom,0px));animation:mUp .28s cubic-bezier(.22,1,.36,1);max-height:94dvh;overflow-y:auto;overflow-x:hidden}
 .cdlg-t{font-family:'Clash Display',sans-serif;font-size:18px;font-weight:700;margin-bottom:8px;color:var(--ink)}
 .cdlg-s{font-size:14px;color:var(--ink3);margin-bottom:22px;line-height:1.5}
 .cdlg-btns{display:flex;gap:10px}
