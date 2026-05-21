@@ -129,12 +129,12 @@ textarea.inp{resize:none;height:78px;line-height:1.5}
 .hero{margin:0 16px 18px;background:linear-gradient(135deg,#1a1a1c 0%,#1e1e22 100%);border:1px solid rgba(255,255,255,.08);border-radius:26px;padding:26px 24px 22px;position:relative;overflow:hidden;color:#fff}
 .hero::before{content:'';position:absolute;top:-80px;right:-80px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.04)}
 .hero::after{content:'';position:absolute;bottom:-50px;left:-30px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.03)}
-.hero-lbl{font-size:11px;opacity:.5;letter-spacing:.8px;text-transform:uppercase;font-weight:700;margin-bottom:6px}
+.hero-lbl{font-size:11px;opacity:1;letter-spacing:.8px;text-transform:uppercase;font-weight:700;margin-bottom:6px}
 .hero-amt{font-family:'Clash Display',sans-serif;font-size:48px;font-weight:700;letter-spacing:-2.5px;line-height:1;margin-bottom:5px;color:#fff}
-.hero-sub{font-size:12px;opacity:.45;margin-bottom:20px;font-weight:500}
+.hero-sub{font-size:12px;opacity:1;margin-bottom:20px;font-weight:500}
 .hero-stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(255,255,255,.1);border-radius:14px;overflow:hidden}
 .hst{background:rgba(255,255,255,.06);padding:13px 16px}
-.hst-l{font-size:10px;opacity:.5;font-weight:700;letter-spacing:.4px;margin-bottom:4px}
+.hst-l{font-size:10px;opacity:1;font-weight:700;letter-spacing:.4px;margin-bottom:4px}
 .hst-v{font-size:17px;font-weight:700;font-family:'Clash Display',sans-serif;letter-spacing:-.5px}
 .hst-v.g{color:#4FFFB0}.hst-v.r{color:#FF6B7A}
 
@@ -144,9 +144,9 @@ textarea.inp{resize:none;height:78px;line-height:1.5}
 .ac:active{transform:scale(.97)}
 .ac.cash{background:linear-gradient(135deg,#0B6E4F,#1FA463);color:#fff;border:1px solid rgba(255,255,255,.12)}
 .ac.bank{background:linear-gradient(135deg,#1A2980,#26D0CE);color:#fff}
-.ac-lbl{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;opacity:.55;margin-bottom:6px}
+.ac-lbl{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;opacity:1;margin-bottom:6px}
 .ac-amt{font-family:'Clash Display',sans-serif;font-size:22px;font-weight:700;letter-spacing:-.8px;line-height:1;margin-bottom:3px}
-.ac-sub{font-size:11px;opacity:.45;font-weight:500}
+.ac-sub{font-size:11px;opacity:1;font-weight:500}
 .ac-deco{position:absolute;right:-16px;bottom:-16px;width:72px;height:72px;border-radius:50%;opacity:.07;background:#fff}
 .piggy-transfer-btn{flex-shrink:0;width:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-radius:20px;background:linear-gradient(135deg,#2d1554,#6D28D9);border:none;color:#fff;cursor:pointer;transition:.15s;padding:12px 8px}
 .piggy-transfer-btn:active{transform:scale(.95)}
@@ -456,14 +456,15 @@ nav{background:rgba(17,17,19,.96)!important;border-color:rgba(255,255,255,.08)}
 
 /* Hero card */
 .hero{background:#1c1c1e!important;border:1px solid rgba(255,255,255,.08)}
-.hero-lbl{color:rgba(255,255,255,.6)}
-.hero-sub{color:rgba(255,255,255,.5)}
-.hst-l{color:rgba(255,255,255,.6)}
+.hero-lbl{color:rgba(255,255,255,.65)}
+.hero-sub{color:rgba(255,255,255,.62)}
+.hst-l{color:rgba(255,255,255,.65)}
 .hst-sv{color:#F5F4F0}
 
 /* Account cards */
 .ac.cash{background:linear-gradient(135deg,#0B6E4F,#1FA463)!important;color:#fff;border:1px solid rgba(255,255,255,.12)}
-.ac-lbl{color:rgba(255,255,255,.5)}
+.ac-lbl{color:rgba(255,255,255,.8)}
+.ac-sub{color:rgba(255,255,255,.8)}
 
 /* Inputs */
 .inp{background:#1c1c1e;color:#F5F4F0;border-color:rgba(255,255,255,.08)}
