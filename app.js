@@ -24,7 +24,6 @@ const COLORS = ['#E8304A','#FF6B35','#F0900A','#00B876','#2B6FED','#8B5CF6','#EC
 const FREQ = {monthly:'Ежемесячно',weekly:'Еженедельно',yearly:'Ежегодно',quarterly:'Ежеквартально',daily:'Ежедневно'};
 const MONTHS = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
 const DAYS = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
-const BUILTIN = ['food','coffee','transport','shopping','health','housing','entertain','sport','travel','pets','salary','freelance','invest','gift','other'];
 const DEF_CATS = [
   {id:'food',name:'Еда',icon:'🍕',color:'#FF6B35',type:'expense'},
   {id:'coffee',name:'Кофе',icon:'☕',color:'#F0900A',type:'expense'},
@@ -1026,7 +1025,6 @@ document.getElementById('cedit-del').addEventListener('click', () => deleteCat(e
 function deleteCat(cid, fromModal = false) {
   const cat = S.categories.find(c => c.id === cid);
   if (!cat) return;
-  if (BUILTIN.includes(cid)) { toast('⚠️ Нельзя удалить встроенную категорию'); return; }
   const txc = S.transactions.filter(t => t.category === cid).length;
   confirmSheet({
     title: 'Удалить категорию?',
