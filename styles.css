@@ -385,6 +385,8 @@ textarea.inp{resize:none;height:78px;line-height:1.5}
 /* ── PROFILE ── */
 .prof-top{padding:20px 22px 20px;display:flex;align-items:center;gap:16px}
 .av{width:68px;height:68px;border-radius:22px;background:#2c2c2e;display:flex;align-items:center;justify-content:center;font-family:'Clash Display',sans-serif;font-size:26px;font-weight:700;color:#fff;flex-shrink:0;position:relative}
+.av-emoji{font-size:38px;line-height:1}
+.egc.av-letter{font-family:'Clash Display',sans-serif;font-weight:700;font-size:18px;color:var(--ink)}
 .av-ed{position:absolute;bottom:-5px;right:-5px;width:22px;height:22px;border-radius:8px;background:var(--p);border:2px solid var(--p);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--sh)}
 .pt-n{font-family:'Clash Display',sans-serif;font-size:24px;font-weight:700;letter-spacing:-.5px;margin-bottom:3px}
 .pt-e{font-size:13px;color:var(--ink3);font-weight:500}

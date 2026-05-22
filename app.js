@@ -20,6 +20,7 @@ if ('serviceWorker' in navigator) {
 // ══════════════════════════════════════
 const ALL_EMO = ['🏠','🚗','🍕','☕','🛍️','💊','🎬','✈️','📚','🎮','💪','🐾','🎵','👗','🍺','🍔','🛒','💼','💻','📱','⚽','🎓','🏖️','🎁','💅','🧴','⚡','🌿','🎨','🔧','🎭','🏋️','🍣','🥗','🎪','🎯','🏦','🚂','🎸','🍜'];
 const GOAL_EMO = ['🎯','✈️','🏠','🚗','💍','🎓','💻','📱','🏖️','🎸','💰','🛳️','🏔️','🌍','🏡','⛵'];
+const AVATAR_EMO = ['🙂','😎','🤓','🥳','🤩','😺','🐶','🦊','🐼','🐯','🦁','🐵','🐰','🦄','🐸','🐧','🦉','🐺','🤖','👽','🎃','🌟','🔥','💎','🚀','⚡','🍀','🌈'];
 const COLORS = ['#E8304A','#FF6B35','#F0900A','#00B876','#2B6FED','#8B5CF6','#EC4899','#14B8A6','#6366F1','#D97706','#64748B','#10B981'];
 const FREQ = {monthly:'Ежемесячно',weekly:'Еженедельно',yearly:'Ежегодно',quarterly:'Ежеквартально',daily:'Ежедневно'};
 const MONTHS = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
@@ -256,6 +257,25 @@ function buildEmoji(elId, list = ALL_EMO, selected = null) {
 }
 function getEmoji(elId) {
   return document.querySelector(`#${elId} .egc.on`)?.dataset.e || '📦';
+}
+
+// ── AVATAR PICKER (эмодзи + «буква») ──
+function buildAvatarPicker(elId, selected = '') {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const nm = (S.profile && S.profile.name) ? S.profile.name.trim() : '';
+  const letter = (nm && nm !== 'Денис' ? nm[0] : 'А').toUpperCase();
+  const cells = [`<div class="egc av-letter${!selected ? ' on' : ''}" data-av="">${letter}</div>`]
+    .concat(AVATAR_EMO.map(e => `<div class="egc${selected === e ? ' on' : ''}" data-av="${e}">${e}</div>`));
+  el.innerHTML = cells.join('');
+  el.querySelectorAll('.egc').forEach(c => c.addEventListener('click', () => {
+    el.querySelectorAll('.egc').forEach(x => x.classList.remove('on'));
+    c.classList.add('on');
+  }));
+}
+function getAvatar(elId) {
+  const on = document.querySelector(`#${elId} .egc.on`);
+  return on ? on.dataset.av : '';
 }
 
 // ── COLOR PICKER ──────────────────────
@@ -1512,7 +1532,8 @@ function calcStreak() {
 
 function renderProfile() {
   const p = S.profile;
-  document.getElementById('p-av').innerHTML = p.name[0].toUpperCase() + '<div class="av-ed" onclick="openEditProf()"><svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z"/></svg></div>';
+  const avInner = p.avatar ? `<span class="av-emoji">${p.avatar}</span>` : p.name[0].toUpperCase();
+  document.getElementById('p-av').innerHTML = avInner + '<div class="av-ed" onclick="openEditProf()"><svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z"/></svg></div>';
   document.getElementById('p-name').textContent = p.name;
   document.getElementById('p-email').textContent = p.email;
   document.getElementById('p-joined').textContent = 'С ' + new Date(S.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -1604,12 +1625,13 @@ function renderFSCats(filter) {
 function openEditProf() {
   document.getElementById('prof-name').value = S.profile.name;
   document.getElementById('prof-email').value = S.profile.email;
+  buildAvatarPicker('prof-emoji', S.profile.avatar || '');
   openM('m-prof');
 }
 document.getElementById('prof-ok').addEventListener('click', () => {
   const name = document.getElementById('prof-name').value.trim();
   if (!name) { toast('Введи имя'); return; }
-  S.profile = { name, email: document.getElementById('prof-email').value.trim() };
+  S.profile = { name, email: document.getElementById('prof-email').value.trim(), avatar: getAvatar('prof-emoji') || null };
   save(); closeM('m-prof'); renderProfile(); renderHome(); toast('✅ Профиль сохранён');
 });
 // Начало месяца — модалка выбора дня
@@ -1619,6 +1641,18 @@ document.getElementById('prof-ok').addEventListener('click', () => {
 function initSettings() {
   S.settings = S.settings || {};
   const sets = S.settings;
+
+  // Язык и валюта (пока заглушки — выбор сохраняется)
+  const langSel = document.getElementById('set-lang');
+  if (langSel) {
+    langSel.value = sets.lang || 'ru';
+    if (!langSel._bound) { langSel._bound = true; langSel.addEventListener('change', e => { S.settings.lang = e.target.value; save(); }); }
+  }
+  const curSel = document.getElementById('set-cur');
+  if (curSel) {
+    curSel.value = sets.currency || 'EUR';
+    if (!curSel._bound) { curSel._bound = true; curSel.addEventListener('change', e => { S.settings.currency = e.target.value; save(); }); }
+  }
 
   const soundTog = document.getElementById('set-sound');
   const soundRow = document.getElementById('set-sound-row');
@@ -1939,6 +1973,7 @@ function showOnboarding() {
   document.getElementById('onb-email').value = (S.profile.email && S.profile.email !== 'denis@example.com') ? S.profile.email : '';
   document.getElementById('onb-lang').value = S.settings.lang || 'ru';
   document.getElementById('onb-cur').value = S.settings.currency || 'EUR';
+  buildAvatarPicker('onb-emoji', S.profile.avatar || '');
   el.classList.add('on');
   setTimeout(() => document.getElementById('onb-name').focus(), 350);
 }
@@ -1952,7 +1987,7 @@ function finishOnboarding() {
     toast('Введи имя');
     return;
   }
-  S.profile = { name, email: document.getElementById('onb-email').value.trim() };
+  S.profile = { name, email: document.getElementById('onb-email').value.trim(), avatar: getAvatar('onb-emoji') || null };
   S.settings.lang = document.getElementById('onb-lang').value || 'ru';
   S.settings.currency = document.getElementById('onb-cur').value || 'EUR';
   S.settings.onboarded = true;
