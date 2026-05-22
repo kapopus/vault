@@ -654,6 +654,10 @@ function openAddM(type = 'expense') {
   document.getElementById('add-rep').value = 'none';
   document.querySelectorAll('#add-type-sw .tsw').forEach(b => b.classList.toggle('on', b.dataset.t === addType));
   buildAcctPicker('add-ap', 'v', 'cash');
+  // Когда меняем «Откуда» в режиме перевода — обновляем варианты «Куда»
+  document.querySelectorAll('#add-ap [data-v]').forEach(b => {
+    b.addEventListener('click', () => { if (addType === 'transfer') updateTransferToOptions(); });
+  });
   buildCatPicker('add-cat', addType);
   renderTmplSc();
   updateTransferUI();
@@ -689,6 +693,30 @@ function updateTransferToOptions() {
 // Инициализируем to-picker
 buildAcctPicker('add-to-ap', 'to', 'bank');
 
+// ── ATM: быстрый перевод банк → наличные ──
+function openATM() {
+  const bank = acctBal('bank');
+  const { close } = openSheet(`
+    <div class="cdlg-t" style="text-align:center">🏧 Банкомат</div>
+    <div class="cdlg-s" style="text-align:center">Снять наличные с банковского счёта</div>
+    <div class="amt-blk"><div class="amt-sym">€</div><input id="atm-amt" class="amt-inp" type="number" inputmode="decimal" placeholder="0,00"></div>
+    <div style="font-size:13px;color:var(--ink3);text-align:center;margin:-4px 0 16px">Доступно на банке: <b style="color:var(--ink)">${fmt(bank)} €</b></div>
+    <button class="btn btn-g" id="atm-ok">💵 Снять</button>
+  `);
+  setTimeout(() => document.getElementById('atm-amt')?.focus(), 100);
+  document.getElementById('atm-ok').onclick = () => {
+    const amt = parseFloat(document.getElementById('atm-amt').value);
+    if (!amt || amt <= 0) { toast('Введи сумму'); return; }
+    if (amt > acctBal('bank')) { toast('⚠️ На банке только ' + fmt(acctBal('bank')) + ' €'); return; }
+    S.transactions.push({ id: uid(), type: 'transfer', amount: amt, desc: 'Снятие в банкомате', note: '', date: today(), account: 'bank', toAcct: 'cash', category: 'other', isRec: false });
+    save(); close(); closeM('m-add'); renderHome();
+    if (curSc === 'transactions') renderTx();
+    playAddSound();
+    toast(`💵 Снято ${fmt(amt)} € в наличные`);
+  };
+}
+document.getElementById('atm-btn')?.addEventListener('click', openATM);
+
 // type switch in add modal
 document.querySelectorAll('#add-type-sw .tsw').forEach(b => b.addEventListener('click', () => {
   addType = b.dataset.t;
@@ -699,10 +727,8 @@ document.querySelectorAll('#add-type-sw .tsw').forEach(b => b.addEventListener('
   updateTransferUI();
 }));
 
-// Когда меняем "Откуда" — обновляем "Куда"
-document.querySelectorAll('#add-ap [data-v]').forEach(b => {
-  b.addEventListener('click', () => { if (addType === 'transfer') updateTransferToOptions(); });
-});
+// Listener for "from"→"to" sync is attached inside openAddM after
+// buildAcctPicker (it clones nodes, so module-load handlers are lost).
 
 document.getElementById('add-ok').addEventListener('click', () => {
   const amount = parseFloat(document.getElementById('add-amt').value);

@@ -812,6 +812,10 @@ mark{background:rgba(240,144,10,.35)}
 .cdlg-ok{background:var(--ink);color:var(--p)}
 .cdlg-ok.danger{background:var(--rd);color:#fff}
 
+/* ── ATM SHORTCUT BUTTON ── */
+.atm-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border-radius:14px;border:1.5px dashed rgba(255,255,255,.15);background:var(--p2);color:var(--ink2);font-family:'Satoshi',sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:12px;transition:.15s}
+.atm-btn:active{transform:scale(.97);background:var(--p3)}
+
 /* ── PIN PAD ── */
 .pin-dots{display:flex;justify-content:center;gap:16px;margin:18px 0 24px}
 .pin-dots span{width:14px;height:14px;border-radius:50%;border:2px solid var(--bd2);transition:.15s}
