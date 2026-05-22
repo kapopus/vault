@@ -1915,9 +1915,57 @@ async function appInit() {
   } catch(e) {}
 
   initSettings();
+  maybeOnboard();
   renderHome();
   autoNotifs();
 }
+
+// ══════════════════════════════════════
+// ONBOARDING (первый запуск)
+// ══════════════════════════════════════
+function maybeOnboard() {
+  S.settings = S.settings || {};
+  if (S.settings.onboarded) return;
+  // Если уже есть данные — это не первый запуск, тихо помечаем пройденным
+  const hasData = S.transactions.length || S.goals.length || S.recurring.length || (S.debts || []).length;
+  if (hasData) { S.settings.onboarded = true; save(); return; }
+  showOnboarding();
+}
+
+function showOnboarding() {
+  const el = document.getElementById('onboarding');
+  if (!el) return;
+  document.getElementById('onb-name').value = (S.profile.name && S.profile.name !== 'Денис') ? S.profile.name : '';
+  document.getElementById('onb-email').value = (S.profile.email && S.profile.email !== 'denis@example.com') ? S.profile.email : '';
+  document.getElementById('onb-lang').value = S.settings.lang || 'ru';
+  document.getElementById('onb-cur').value = S.settings.currency || 'EUR';
+  el.classList.add('on');
+  setTimeout(() => document.getElementById('onb-name').focus(), 350);
+}
+
+function finishOnboarding() {
+  const name = document.getElementById('onb-name').value.trim();
+  if (!name) {
+    const inp = document.getElementById('onb-name');
+    inp.classList.add('shake'); setTimeout(() => inp.classList.remove('shake'), 400);
+    inp.focus();
+    toast('Введи имя');
+    return;
+  }
+  S.profile = { name, email: document.getElementById('onb-email').value.trim() };
+  S.settings.lang = document.getElementById('onb-lang').value || 'ru';
+  S.settings.currency = document.getElementById('onb-cur').value || 'EUR';
+  S.settings.onboarded = true;
+  save();
+  document.getElementById('onboarding').classList.remove('on');
+  renderHome();
+  renderProfile();
+  launchConfetti();
+  toast('👋 Добро пожаловать, ' + name + '!');
+}
+
+document.getElementById('onb-go').addEventListener('click', finishOnboarding);
+document.getElementById('onb-name').addEventListener('keydown', e => { if (e.key === 'Enter') finishOnboarding(); });
 
 appInit();
 
