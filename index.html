@@ -354,23 +354,23 @@
     <div class="type-sw" id="add-type-sw">
       <button class="tsw on exp" data-t="expense">↓ Расход</button>
       <button class="tsw inc" data-t="income">↑ Доход</button>
-      <button class="tsw tra" data-t="transfer">⇄ Перевод</button>
+      <button class="tsw tra" data-t="transfer">🏧 Банкомат</button>
     </div>
     <div class="amt-blk"><div class="amt-sym">€</div><input class="amt-inp" id="add-amt" type="number" placeholder="0,00" inputmode="decimal"></div>
     <div class="ff"><div class="fl">Описание</div><input class="inp" id="add-desc" placeholder="Например: Продукты, кофе..."></div>
-    <div class="ff"><div class="fl">Счёт</div>
+    <div class="ff" id="add-acct-ff"><div class="fl">Счёт</div>
       <div class="ap" id="add-ap">
         <button class="apb on" data-v="cash">💵 Наличные</button>
         <button class="apb" data-v="bank">🏦 Банк</button>
       </div>
-      <div id="add-transfer-to" style="display:none;margin-top:8px">
-        <button type="button" class="atm-btn" id="atm-btn">🏧 Банкомат · снять наличные</button>
-        <div class="fl">Куда переводим</div>
-        <div class="ap" id="add-to-ap">
-          <button class="apb on" data-to="bank">🏦 Банк</button>
-          <button class="apb" data-to="cash">💵 Наличные</button>
-        </div>
+    </div>
+    <div class="ff" id="add-atm-ff" style="display:none">
+      <div class="fl">Операция</div>
+      <div class="ap" id="add-atm-dir">
+        <button class="apb on" type="button" data-dir="withdraw">💵 Снять с банка</button>
+        <button class="apb" type="button" data-dir="deposit">💰 Внести на банк</button>
       </div>
+      <div id="add-atm-hint" style="font-size:12px;color:var(--ink3);margin-top:10px;text-align:center"></div>
     </div>
     <div class="ff"><div class="fl">Категория</div><div class="cpkr" id="add-cat"></div></div>
     <div class="ff"><div class="fl">Дата</div><input class="inp" id="add-date" type="date"></div>
@@ -402,7 +402,7 @@
     <div class="type-sw" id="etx-type-sw">
       <button class="tsw on exp" data-et="expense">↓ Расход</button>
       <button class="tsw inc" data-et="income">↑ Доход</button>
-      <button class="tsw tra" data-et="transfer">⇄ Перевод</button>
+      <button class="tsw tra" data-et="transfer">🏧 Банкомат</button>
     </div>
     <div class="amt-blk"><div class="amt-sym">€</div><input class="amt-inp" id="etx-amt" type="number" placeholder="0,00" inputmode="decimal"></div>
     <div class="ff"><div class="fl">Описание</div><input class="inp" id="etx-desc" placeholder="Описание..."></div>

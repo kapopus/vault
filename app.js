@@ -546,11 +546,11 @@ function txHTML(t) {
   const isInc = t.type === 'income', isTra = t.type === 'transfer';
   const q = txQ || '';
   return `<div class="tx" data-id="${t.id}">
-    <div class="tx-ic" style="background:${cat.color}18">${isTra ? '🔄' : cat.icon}</div>
+    <div class="tx-ic" style="background:${cat.color}18">${isTra ? '🏧' : cat.icon}</div>
     <div class="tx-b">
       <div class="tx-n">${highlight(t.desc || cat.name, q)}</div>
       <div class="tx-m">
-        <span class="tx-c">${highlight(isTra ? 'Перевод' : cat.name, q)}</span>
+        <span class="tx-c">${highlight(isTra ? 'Банкомат' : cat.name, q)}</span>
         <span class="tx-d">· ${dateLabel(t.date)}</span>
         ${isTra ? `<span class="tx-d">· ${t.account==='cash'?'💵':'🏦'}→${t.toAcct==='piggy'?'🐷':t.toAcct==='cash'?'💵':'🏦'}</span>` : `<span class="tx-d">${t.account === 'cash' ? '· 💵' : '· 🏦'}</span>`}
         ${t.isRec ? '<span class="pill rec" style="padding:2px 6px;font-size:9px">🔁</span>' : ''}
@@ -573,9 +573,9 @@ function openDet(id) {
   const isInc = t.type === 'income', isTra = t.type === 'transfer';
   const color = isTra ? 'var(--bl)' : isInc ? 'var(--gr)' : 'var(--rd)';
   document.getElementById('det-body').innerHTML = `
-    <div class="det-ico">${isTra ? '🔄' : cat.icon}</div>
+    <div class="det-ico">${isTra ? '🏧' : cat.icon}</div>
     <div class="det-amt" style="color:${color}">${isTra ? '' : isInc ? '+' : '−'}${fmt(t.amount)} €</div>
-    <div class="det-sub">${isTra ? 'Перевод' : cat.name} · ${dateLabel(t.date)}</div>
+    <div class="det-sub">${isTra ? 'Банкомат' : cat.name} · ${dateLabel(t.date)}</div>
     <div class="det-row"><span class="det-l">Описание</span><span class="det-r">${t.desc || '—'}</span></div>
     <div class="det-row"><span class="det-l">Категория</span><span class="det-r">${cat.icon} ${cat.name}</span></div>
     <div class="det-row"><span class="det-l">Счёт</span><span class="det-r">${isTra ? `${acctLabel(t.account)} → ${acctLabel(t.toAcct)}` : acctLabel(t.account)}</span></div>
@@ -654,10 +654,9 @@ function openAddM(type = 'expense') {
   document.getElementById('add-rep').value = 'none';
   document.querySelectorAll('#add-type-sw .tsw').forEach(b => b.classList.toggle('on', b.dataset.t === addType));
   buildAcctPicker('add-ap', 'v', 'cash');
-  // Когда меняем «Откуда» в режиме перевода — обновляем варианты «Куда»
-  document.querySelectorAll('#add-ap [data-v]').forEach(b => {
-    b.addEventListener('click', () => { if (addType === 'transfer') updateTransferToOptions(); });
-  });
+  // Reset ATM direction to default «withdraw»
+  document.querySelectorAll('#add-atm-dir .apb').forEach(x => x.classList.remove('on'));
+  document.querySelector('#add-atm-dir [data-dir="withdraw"]')?.classList.add('on');
   buildCatPicker('add-cat', addType);
   renderTmplSc();
   updateTransferUI();
@@ -666,56 +665,35 @@ function openAddM(type = 'expense') {
 }
 
 function updateTransferUI() {
-  const isTransfer = addType === 'transfer';
-  document.getElementById('add-transfer-to').style.display = isTransfer ? '' : 'none';
-  document.getElementById('add-rep-wrap').style.display = isTransfer ? 'none' : '';
-  // Hide category for transfers
+  const isAtm = addType === 'transfer'; // тип внутри стораджа остаётся transfer
+  document.getElementById('add-atm-ff').style.display = isAtm ? '' : 'none';
+  document.getElementById('add-acct-ff').style.display = isAtm ? 'none' : '';
+  document.getElementById('add-rep-wrap').style.display = isAtm ? 'none' : '';
+  // Скрываем категорию в режиме банкомата
   const catFF = document.getElementById('add-cat')?.closest('.ff');
-  if (catFF) catFF.style.display = isTransfer ? 'none' : '';
-  if (isTransfer) updateTransferToOptions();
+  if (catFF) catFF.style.display = isAtm ? 'none' : '';
+  if (isAtm) updateAtmHint();
 }
 
-function updateTransferToOptions() {
-  const from = getAcctPicker('add-ap', 'v');
-  const toAp = document.getElementById('add-to-ap');
-  if (!toAp) return;
-  // Убираем кнопку того же счёта откуда
-  toAp.querySelectorAll('.apb').forEach(b => {
-    const hide = b.dataset.to === from;
-    b.style.display = hide ? 'none' : '';
-  });
-  // Выбираем первую видимую
-  const first = [...toAp.querySelectorAll('.apb')].find(b => b.style.display !== 'none');
-  toAp.querySelectorAll('.apb').forEach(b => b.classList.remove('on'));
-  first?.classList.add('on');
+function getAtmDir() {
+  return document.querySelector('#add-atm-dir .apb.on')?.dataset.dir || 'withdraw';
 }
 
-// Инициализируем to-picker
-buildAcctPicker('add-to-ap', 'to', 'bank');
-
-// ── ATM: быстрый перевод банк → наличные ──
-function openATM() {
-  const bank = acctBal('bank');
-  const { close } = openSheet(`
-    <div class="cdlg-t" style="text-align:center">🏧 Банкомат</div>
-    <div class="cdlg-s" style="text-align:center">Снять наличные с банковского счёта</div>
-    <div class="amt-blk"><div class="amt-sym">€</div><input id="atm-amt" class="amt-inp" type="number" inputmode="decimal" placeholder="0,00"></div>
-    <div style="font-size:13px;color:var(--ink3);text-align:center;margin:-4px 0 16px">Доступно на банке: <b style="color:var(--ink)">${fmt(bank)} €</b></div>
-    <button class="btn btn-g" id="atm-ok">💵 Снять</button>
-  `);
-  setTimeout(() => document.getElementById('atm-amt')?.focus(), 100);
-  document.getElementById('atm-ok').onclick = () => {
-    const amt = parseFloat(document.getElementById('atm-amt').value);
-    if (!amt || amt <= 0) { toast('Введи сумму'); return; }
-    if (amt > acctBal('bank')) { toast('⚠️ На банке только ' + fmt(acctBal('bank')) + ' €'); return; }
-    S.transactions.push({ id: uid(), type: 'transfer', amount: amt, desc: 'Снятие в банкомате', note: '', date: today(), account: 'bank', toAcct: 'cash', category: 'other', isRec: false });
-    save(); close(); closeM('m-add'); renderHome();
-    if (curSc === 'transactions') renderTx();
-    playAddSound();
-    toast(`💵 Снято ${fmt(amt)} € в наличные`);
-  };
+function updateAtmHint() {
+  const dir = getAtmDir();
+  const hint = document.getElementById('add-atm-hint');
+  if (!hint) return;
+  if (dir === 'withdraw') hint.innerHTML = `Доступно на банке: <b style="color:var(--ink)">${fmt(acctBal('bank'))} €</b>`;
+  else hint.innerHTML = `Доступно наличными: <b style="color:var(--ink)">${fmt(acctBal('cash'))} €</b>`;
 }
-document.getElementById('atm-btn')?.addEventListener('click', openATM);
+
+// Привязываем переключение направления банкомата (статичные кнопки в add-modal)
+document.querySelectorAll('#add-atm-dir .apb').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#add-atm-dir .apb').forEach(x => x.classList.remove('on'));
+  b.classList.add('on');
+  updateAtmHint();
+}));
+
 
 // type switch in add modal
 document.querySelectorAll('#add-type-sw .tsw').forEach(b => b.addEventListener('click', () => {
@@ -741,15 +719,21 @@ document.getElementById('add-ok').addEventListener('click', () => {
   const category = getPickedCat('add-cat');
 
   if (addType === 'transfer') {
-    const toAcct = getAcctPicker('add-to-ap', 'to');
-    const fromAcct = account; // account = getAcctPicker('add-ap', 'v')
-
-    // Обычный перевод счёт → счёт (копилка пополняется только из её экрана)
-    S.transactions.push({ id: uid(), type: 'transfer', amount, desc: desc || 'Перевод', note, date, account: fromAcct, toAcct, category, isRec: false });
+    // Банкомат: направление задаёт from/to
+    const dir = getAtmDir(); // 'withdraw' (банк→нал) | 'deposit' (нал→банк)
+    const fromAcct = dir === 'withdraw' ? 'bank' : 'cash';
+    const toAcct = dir === 'withdraw' ? 'cash' : 'bank';
+    const srcBal = acctBal(fromAcct);
+    if (amount > srcBal) {
+      toast(`⚠️ ${fromAcct === 'bank' ? 'На банке' : 'Наличными'} только ${fmt(srcBal)} €`);
+      return;
+    }
+    const defDesc = dir === 'withdraw' ? 'Снятие в банкомате' : 'Внесение в банкомате';
+    S.transactions.push({ id: uid(), type: 'transfer', amount, desc: desc || defDesc, note, date, account: fromAcct, toAcct, category: 'other', isRec: false });
     save(); closeM('m-add'); autoNotifs(); renderHome();
     if (curSc === 'transactions') renderTx();
     playAddSound();
-    toast('✅ Перевод выполнен');
+    toast(dir === 'withdraw' ? `💵 Снято ${fmt(amount)} € в наличные` : `🏦 Внесено ${fmt(amount)} € на банк`);
     return;
   }
 
