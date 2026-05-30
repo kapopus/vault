@@ -89,6 +89,8 @@ function save() {
   const data = JSON.stringify(S);
   localStorage.setItem(KEY, data);
   saveToIDB(data); // дублируем в IndexedDB
+  // Облачная синхронизация (Supabase) — no-op, если облако не настроено.
+  if (window.cloudPushDebounced) window.cloudPushDebounced(S);
 }
 
 function parseState(raw) {
@@ -1968,10 +1970,64 @@ async function appInit() {
     }
   } catch(e) {}
 
+  // ── Облачный гейт (Supabase) ──
+  // Если облако настроено и юзер залогинен — подменяем S на стейт из облака
+  // (или пушим локальный, если в облаке пусто). Если облако выключено —
+  // cloudReady резолвится сразу с cloudless:true.
+  if (window.cloudReady) {
+    try {
+      const r = await window.cloudReady;
+      if (!r.cloudless) {
+        if (r.state) {
+          const parsed = parseState(r.state);
+          if (parsed) {
+            S = parsed;
+            localStorage.setItem(KEY, JSON.stringify(S));
+            saveToIDB(JSON.stringify(S));
+          }
+        }
+        // Автозаполнение email из аккаунта (если профильный email — дефолтный/пустой)
+        if (window.cloudUser?.email) {
+          const cur = (S.profile?.email || '').trim();
+          if (!cur || cur === 'denis@example.com') {
+            S.profile.email = window.cloudUser.email;
+            save();
+          }
+        }
+        // Если в облаке пусто — пушим то, что есть локально, чтобы первая запись появилась
+        if (!r.state) save();
+      }
+    } catch (e) { console.warn('[cloud] init error', e); }
+  }
+
   initSettings();
   maybeOnboard();
   renderHome();
   autoNotifs();
+  initAccountSection();
+}
+
+// ── Секция «Аккаунт» в профиле ──
+function initAccountSection() {
+  const sec = document.getElementById('acct-section');
+  if (!sec) return;
+  if (!window.cloudEnabled || !window.cloudUser) { sec.style.display = 'none'; return; }
+  sec.style.display = '';
+  const em = document.getElementById('acct-email');
+  if (em) em.textContent = window.cloudUser.email || '—';
+  const out = document.getElementById('acct-signout');
+  if (out && !out._bound) {
+    out._bound = true;
+    out.addEventListener('click', () => {
+      confirmSheet({
+        title: 'Выйти из аккаунта?',
+        text: 'Локальная копия данных будет очищена. Все записи останутся в облаке и подтянутся при следующем входе.',
+        okText: 'Выйти',
+        danger: true,
+        onOk: () => window.cloudSignOut?.(),
+      });
+    });
+  }
 }
 
 // ══════════════════════════════════════

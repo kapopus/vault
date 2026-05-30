@@ -835,3 +835,17 @@ mark{background:rgba(240,144,10,.35)}
 .onb-sub{font-size:14px;color:var(--ink2);line-height:1.5}
 .onb-row{display:flex;gap:12px;margin-bottom:14px}
 .onb-foot{text-align:center;font-size:12px;color:var(--ink3);margin-top:16px;font-weight:500}
+
+/* AUTH (Supabase) */
+#auth{position:fixed;inset:0;z-index:700;background:#111113;display:none;flex-direction:column;justify-content:center;overflow-y:auto;padding:max(48px,env(safe-area-inset-top,44px)) 24px calc(32px + env(safe-area-inset-bottom,0px))}
+#auth.on{display:flex;animation:fIn .3s cubic-bezier(.22,1,.36,1)}
+.auth-tabs{display:flex;background:var(--p2);border-radius:14px;padding:4px;margin-bottom:18px;gap:4px}
+.auth-tab{flex:1;background:none;border:none;color:var(--ink3);font-family:'Satoshi',sans-serif;font-size:14px;font-weight:600;padding:10px;border-radius:10px;cursor:pointer;transition:.2s}
+.auth-tab.on{background:var(--p3);color:var(--ink)}
+.auth-or{display:flex;align-items:center;text-align:center;margin:16px 0;color:var(--ink4);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.6px}
+.auth-or::before,.auth-or::after{content:'';flex:1;height:1px;background:var(--bd)}
+.auth-or span{padding:0 12px}
+.auth-google-btn{background:#fff;color:#1f1f1f;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:15px}
+.auth-google-btn:active{transform:scale(.98)}
+.auth-link{display:block;text-align:center;color:var(--ink3);font-size:13px;font-weight:500;margin-top:14px;text-decoration:none}
+.auth-link:hover{color:var(--ink2)}
