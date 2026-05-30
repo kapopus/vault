@@ -2028,6 +2028,24 @@ function initAccountSection() {
       });
     });
   }
+
+  const del = document.getElementById('acct-delete');
+  if (del && !del._bound) {
+    del._bound = true;
+    del.addEventListener('click', () => {
+      confirmSheet({
+        title: 'Удалить аккаунт?',
+        text: 'Аккаунт и все данные в облаке будут удалены навсегда. Это действие нельзя отменить.',
+        okText: 'Удалить навсегда',
+        danger: true,
+        onOk: async () => {
+          toast('Удаляем аккаунт...');
+          const r = await window.cloudDeleteAccount?.();
+          if (r !== true) toast('⚠️ ' + (r || 'Не удалось удалить аккаунт'));
+        },
+      });
+    });
+  }
 }
 
 // ══════════════════════════════════════

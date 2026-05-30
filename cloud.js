@@ -20,6 +20,7 @@
   window.cloudEnabled = enabled;
   window.cloudPushDebounced = () => {};
   window.cloudSignOut = async () => {};
+  window.cloudDeleteAccount = async () => 'Облако не настроено';
   window.openAuth = () => {};
 
   if (!enabled) {
@@ -81,14 +82,39 @@
     pushTimer = setTimeout(() => push(state), 800);
   };
 
+  function wipeLocal() {
+    try { localStorage.removeItem('vault_v6'); } catch (e) {}
+    try { indexedDB.deleteDatabase('VaultDB'); } catch (e) {}
+  }
+
   window.cloudSignOut = async function () {
     try { await sb.auth.signOut(); } catch (e) {}
     // Чистим локальный стейт, чтобы следующий пользователь не увидел чужие данные.
-    try { localStorage.removeItem('vault_v6'); } catch (e) {}
-    try {
-      indexedDB.deleteDatabase('VaultDB');
-    } catch (e) {}
+    wipeLocal();
     location.reload();
+  };
+
+  // Полное удаление аккаунта. Дёргает серверную функцию delete_user()
+  // (SECURITY DEFINER), которая удаляет строку из auth.users; каскад по
+  // внешнему ключу заодно сносит строку в user_states. Возвращает true/строку-ошибку.
+  window.cloudDeleteAccount = async function () {
+    if (!window.cloudUser) return 'Нет активного аккаунта';
+    try {
+      // На всякий случай сначала чистим свои данные в облаке (если функции нет).
+      try { await sb.from(TABLE).delete().eq('user_id', window.cloudUser.id); } catch (e) {}
+      const { error } = await sb.rpc('delete_user');
+      if (error) {
+        console.warn('[cloud] delete_user error', error);
+        return error.message || 'Не удалось удалить аккаунт';
+      }
+      try { await sb.auth.signOut(); } catch (e) {}
+      wipeLocal();
+      location.reload();
+      return true;
+    } catch (e) {
+      console.warn('[cloud] delete account throw', e);
+      return String(e?.message || e);
+    }
   };
 
   // ── DOM helpers ────────────────────────────────────────────
