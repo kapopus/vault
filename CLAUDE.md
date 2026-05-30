@@ -1,7 +1,8 @@
 # Vault — гайд для Claude Code
 
 Личный финансовый трекер (PWA), чистый HTML/CSS/JS без сборки и фреймворков.
-Интерфейс на русском, валюта только € (EUR). Данные хранятся локально на устройстве.
+Интерфейс на русском, валюта только € (EUR). Данные синхронизируются в облако
+(Supabase) по аккаунту; вход по email/паролю или через Google.
 
 ## Расположение и стек
 - Папка проекта: `C:\cabbage\Projects\vault`
@@ -37,8 +38,15 @@
   document.getElementById('onboarding').classList.remove('on')`.
 
 ## Модель данных (объект `S`)
-Хранится в `localStorage['vault_v6']` + дублируется в IndexedDB (`VaultDB`).
+**Источник правды — облако (Supabase, таблица `user_states`, одна строка на аккаунт,
+всё состояние в `state jsonb`).** При настроенном `config.js` `save()` пушит `S` в БД
+(дебаунс 800мс + флаш на `pagehide`/`visibilitychange`), а localStorage/IndexedDB **не
+используются** (legacy-локалка читается один раз в `appInit` только для миграции старых
+юзеров, потом удаляется). Если `config.js` пустой — фоллбэк в `localStorage['vault_v6']`
++ IndexedDB (`VaultDB`), как раньше (дев-режим без облака).
 `parseState()` задаёт дефолты и мигрирует старые данные — **новые поля добавлять туда же**.
+Облачный слой: `cloud.js` (auth-экран, клиент Supabase, синк), `config.js` (ключи),
+`supabase.sql` (схема + RLS + `delete_user()`). Контракт см. в шапке `cloud.js`.
 ```
 S = {
   profile: { name, email, avatar },        // avatar — эмодзи или null (тогда буква)

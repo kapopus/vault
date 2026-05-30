@@ -86,11 +86,15 @@ function loadFromIDB() {
 }
 
 function save() {
+  // Если облако настроено — БД по аккаунту единственный источник правды,
+  // локально ничего не храним. Иначе (дев без облака) пишем в localStorage/IDB.
+  if (window.cloudEnabled) {
+    if (window.cloudPushDebounced) window.cloudPushDebounced(S);
+    return;
+  }
   const data = JSON.stringify(S);
   localStorage.setItem(KEY, data);
   saveToIDB(data); // дублируем в IndexedDB
-  // Облачная синхронизация (Supabase) — no-op, если облако не настроено.
-  if (window.cloudPushDebounced) window.cloudPushDebounced(S);
 }
 
 function parseState(raw) {
@@ -1800,9 +1804,7 @@ function clearAll() {
       S.accounts = { cash: 0, bank: 0 };
       S.debts = [];
       S.piggy = { balance: 0, history: [] };
-      const data = JSON.stringify(S);
-      localStorage.setItem(KEY, data);
-      saveToIDB(data);
+      save();
       nav('home');
       renderHome();
       toast('🗑 Все данные удалены');
@@ -1949,55 +1951,64 @@ document.getElementById('piggy-take-btn').addEventListener('click', () => piggyT
 // INIT
 // ══════════════════════════════════════
 async function appInit() {
-  // Открываем IndexedDB
-  try {
-    await openIDB();
-    // Если localStorage пустой — пробуем восстановить из IDB
-    const lsRaw = localStorage.getItem(KEY);
-    if (!lsRaw || lsRaw === '{}') {
-      const idbRaw = await loadFromIDB();
-      if (idbRaw) {
-        const parsed = parseState(idbRaw);
-        if (parsed && parsed.transactions.length > 0) {
-          S = parsed;
-          localStorage.setItem(KEY, typeof idbRaw === 'string' ? idbRaw : JSON.stringify(idbRaw));
-          toast('💾 Данные восстановлены из резервной копии');
-        }
-      }
-    } else {
-      // Синхронизируем IDB с актуальным localStorage
-      saveToIDB(lsRaw);
-    }
-  } catch(e) {}
-
-  // ── Облачный гейт (Supabase) ──
-  // Если облако настроено и юзер залогинен — подменяем S на стейт из облака
-  // (или пушим локальный, если в облаке пусто). Если облако выключено —
-  // cloudReady резолвится сразу с cloudless:true.
-  if (window.cloudReady) {
+  if (window.cloudEnabled) {
+    // ── Облачный режим: БД по аккаунту — единственный источник правды ──
+    // Локальное хранилище не используется; читаем legacy-данные лишь один раз
+    // для миграции тех, кто пользовался приложением до перехода на облако.
+    let legacy = null;
     try {
-      const r = await window.cloudReady;
-      if (!r.cloudless) {
-        if (r.state) {
-          const parsed = parseState(r.state);
-          if (parsed) {
-            S = parsed;
-            localStorage.setItem(KEY, JSON.stringify(S));
-            saveToIDB(JSON.stringify(S));
-          }
-        }
-        // Автозаполнение email из аккаунта (если профильный email — дефолтный/пустой)
-        if (window.cloudUser?.email) {
-          const cur = (S.profile?.email || '').trim();
-          if (!cur || cur === 'denis@example.com') {
-            S.profile.email = window.cloudUser.email;
-            save();
-          }
-        }
-        // Если в облаке пусто — пушим то, что есть локально, чтобы первая запись появилась
-        if (!r.state) save();
+      const lsRaw = localStorage.getItem(KEY);
+      if (lsRaw && lsRaw !== '{}') legacy = parseState(lsRaw);
+    } catch (e) {}
+
+    try {
+      const r = await window.cloudReady; // резолвится только после входа в аккаунт
+      if (r.state) {
+        // В облаке уже есть данные — это источник правды.
+        const parsed = parseState(r.state);
+        if (parsed) S = parsed;
+      } else if (legacy && (legacy.transactions.length || (legacy.debts || []).length || legacy.goals.length)) {
+        // В облаке пусто, но есть старые локальные данные — мигрируем их наверх.
+        S = legacy;
+        toast('☁️ Данные перенесены в твой аккаунт');
+      } else {
+        // Совсем новый аккаунт — стартуем с чистого состояния.
+        S = parseState(null) || getDefaultState();
       }
+
+      // Автозаполнение email из аккаунта (если профильный email пустой/дефолтный).
+      if (window.cloudUser?.email) {
+        const cur = (S.profile?.email || '').trim();
+        if (!cur || cur === 'denis@example.com') S.profile.email = window.cloudUser.email;
+      }
+
+      // Гарантируем, что строка в БД существует (первый push для нового аккаунта
+      // или после миграции/автозаполнения email).
+      if (!r.state || legacy || window.cloudUser?.email) save();
+
+      // Подчищаем legacy-копию, чтобы она больше не путалась под ногами.
+      try { localStorage.removeItem(KEY); } catch (e) {}
+      try { indexedDB.deleteDatabase(IDB_NAME); } catch (e) {}
     } catch (e) { console.warn('[cloud] init error', e); }
+  } else {
+    // ── Локальный режим (облако не настроено) — как раньше: localStorage + IDB ──
+    try {
+      await openIDB();
+      const lsRaw = localStorage.getItem(KEY);
+      if (!lsRaw || lsRaw === '{}') {
+        const idbRaw = await loadFromIDB();
+        if (idbRaw) {
+          const parsed = parseState(idbRaw);
+          if (parsed && parsed.transactions.length > 0) {
+            S = parsed;
+            localStorage.setItem(KEY, typeof idbRaw === 'string' ? idbRaw : JSON.stringify(idbRaw));
+            toast('💾 Данные восстановлены из резервной копии');
+          }
+        }
+      } else {
+        saveToIDB(lsRaw);
+      }
+    } catch(e) {}
   }
 
   initSettings();

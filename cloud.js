@@ -19,6 +19,7 @@
   window.cloudUser = null;
   window.cloudEnabled = enabled;
   window.cloudPushDebounced = () => {};
+  window.cloudFlush = () => {};
   window.cloudSignOut = async () => {};
   window.cloudDeleteAccount = async () => 'Облако не настроено';
   window.openAuth = () => {};
@@ -76,11 +77,29 @@
     } catch (e) { console.warn('[cloud] push throw', e); }
   }
 
+  let lastState = null;
+  let dirty = false;
+
   window.cloudPushDebounced = function (state) {
     if (!window.cloudUser) return;
+    lastState = state;
+    dirty = true;
     clearTimeout(pushTimer);
-    pushTimer = setTimeout(() => push(state), 800);
+    pushTimer = setTimeout(() => { dirty = false; push(state); }, 800);
   };
+
+  // Немедленно дописать отложенную запись (вызывается при уходе со страницы).
+  window.cloudFlush = function () {
+    if (!dirty || !window.cloudUser || !lastState) return;
+    clearTimeout(pushTimer);
+    dirty = false;
+    // keepalive позволяет запросу долететь, даже если вкладка закрывается.
+    push(lastState);
+  };
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') window.cloudFlush();
+  });
+  window.addEventListener('pagehide', () => window.cloudFlush());
 
   function wipeLocal() {
     try { localStorage.removeItem('vault_v6'); } catch (e) {}
