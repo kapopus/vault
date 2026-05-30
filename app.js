@@ -265,23 +265,84 @@ function getEmoji(elId) {
   return document.querySelector(`#${elId} .egc.on`)?.dataset.e || '📦';
 }
 
-// ── AVATAR PICKER (эмодзи + «буква») ──
+// ── AVATAR PICKER (фото + эмодзи + «буква») ──
+const isImgAvatar = v => typeof v === 'string' && v.startsWith('data:');
 function buildAvatarPicker(elId, selected = '') {
   const el = document.getElementById(elId);
   if (!el) return;
   const nm = (S.profile && S.profile.name) ? S.profile.name.trim() : '';
   const letter = (nm && nm !== 'Денис' ? nm[0] : 'А').toUpperCase();
-  const cells = [`<div class="egc av-letter${!selected ? ' on' : ''}" data-av="">${letter}</div>`]
-    .concat(AVATAR_EMO.map(e => `<div class="egc${selected === e ? ' on' : ''}" data-av="${e}">${e}</div>`));
+  const img = isImgAvatar(selected);
+  // Запоминаем загруженное фото прямо на элементе, чтобы getAvatar его достал.
+  el._imgData = img ? selected : null;
+  const cells = [
+    `<div class="egc av-letter${!selected ? ' on' : ''}" data-av="">${letter}</div>`,
+    `<div class="egc av-up${img ? ' on has-img' : ''}" data-av="upload"${img ? ` style="background-image:url('${selected}')"` : ''}>${img ? '' : '📷'}</div>`,
+  ].concat(AVATAR_EMO.map(e => `<div class="egc${selected === e ? ' on' : ''}" data-av="${e}">${e}</div>`));
   el.innerHTML = cells.join('');
   el.querySelectorAll('.egc').forEach(c => c.addEventListener('click', () => {
+    if (c.dataset.av === 'upload') { triggerAvatarUpload(elId); return; }
     el.querySelectorAll('.egc').forEach(x => x.classList.remove('on'));
     c.classList.add('on');
   }));
 }
 function getAvatar(elId) {
-  const on = document.querySelector(`#${elId} .egc.on`);
-  return on ? on.dataset.av : '';
+  const el = document.getElementById(elId);
+  const on = el?.querySelector('.egc.on');
+  if (!on) return '';
+  if (on.dataset.av === 'upload') return el._imgData || '';
+  return on.dataset.av;
+}
+
+// Загрузка и сжатие фото-аватара (квадрат 256px, JPEG) → data-URL
+function triggerAvatarUpload(elId) {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  inp.style.display = 'none';
+  document.body.appendChild(inp);
+  inp.addEventListener('change', () => {
+    const file = inp.files && inp.files[0];
+    inp.remove();
+    if (!file) return;
+    if (!/^image\//.test(file.type)) { toast('Нужен файл-изображение'); return; }
+    fileToAvatarDataURL(file).then(dataUrl => {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      el._imgData = dataUrl;
+      const tile = el.querySelector('.egc.av-up');
+      el.querySelectorAll('.egc').forEach(x => x.classList.remove('on'));
+      if (tile) {
+        tile.classList.add('on', 'has-img');
+        tile.textContent = '';
+        tile.style.backgroundImage = `url('${dataUrl}')`;
+      }
+    }).catch(() => toast('Не удалось обработать фото'));
+  });
+  inp.click();
+}
+function fileToAvatarDataURL(file) {
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onerror = rej;
+    fr.onload = () => {
+      const im = new Image();
+      im.onerror = rej;
+      im.onload = () => {
+        const size = 256;
+        const cv = document.createElement('canvas');
+        cv.width = size; cv.height = size;
+        const ctx = cv.getContext('2d');
+        // cover-обрезка по центру
+        const scale = Math.max(size / im.width, size / im.height);
+        const w = im.width * scale, h = im.height * scale;
+        ctx.drawImage(im, (size - w) / 2, (size - h) / 2, w, h);
+        res(cv.toDataURL('image/jpeg', 0.85));
+      };
+      im.src = fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
 }
 
 // ── COLOR PICKER ──────────────────────
@@ -1558,10 +1619,19 @@ function calcStreak() {
 
 function renderProfile() {
   const p = S.profile;
-  const avInner = p.avatar ? `<span class="av-emoji">${p.avatar}</span>` : p.name[0].toUpperCase();
-  document.getElementById('p-av').innerHTML = avInner + '<div class="av-ed" onclick="openEditProf()"><svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z"/></svg></div>';
+  const editBtn = '<div class="av-ed" onclick="openEditProf()"><svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z"/></svg></div>';
+  const avEl = document.getElementById('p-av');
+  if (isImgAvatar(p.avatar)) {
+    avEl.classList.add('has-img');
+    avEl.style.backgroundImage = `url('${p.avatar}')`;
+    avEl.innerHTML = editBtn;
+  } else {
+    avEl.classList.remove('has-img');
+    avEl.style.backgroundImage = '';
+    avEl.innerHTML = (p.avatar ? `<span class="av-emoji">${p.avatar}</span>` : (p.name || 'A')[0].toUpperCase()) + editBtn;
+  }
   document.getElementById('p-name').textContent = p.name;
-  document.getElementById('p-email').textContent = p.email;
+  document.getElementById('p-email').textContent = p.email || '—';
   document.getElementById('p-joined').textContent = 'С ' + new Date(S.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
   const dates = S.transactions.map(t => new Date(t.date));
   document.getElementById('ps-tx').textContent = S.transactions.length;
@@ -1650,14 +1720,16 @@ function renderFSCats(filter) {
 
 function openEditProf() {
   document.getElementById('prof-name').value = S.profile.name;
-  document.getElementById('prof-email').value = S.profile.email;
+  const em = document.getElementById('prof-email-ro');
+  if (em) em.textContent = S.profile.email || (window.cloudUser?.email) || '—';
   buildAvatarPicker('prof-emoji', S.profile.avatar || '');
   openM('m-prof');
 }
 document.getElementById('prof-ok').addEventListener('click', () => {
   const name = document.getElementById('prof-name').value.trim();
   if (!name) { toast('Введи имя'); return; }
-  S.profile = { name, email: document.getElementById('prof-email').value.trim(), avatar: getAvatar('prof-emoji') || null };
+  // Email привязан к аккаунту и не меняется — сохраняем имя и аватар.
+  S.profile = { ...S.profile, name, avatar: getAvatar('prof-emoji') || null };
   save(); closeM('m-prof'); renderProfile(); renderHome(); toast('✅ Профиль сохранён');
 });
 // Начало месяца — модалка выбора дня
@@ -2075,7 +2147,11 @@ function showOnboarding() {
   const el = document.getElementById('onboarding');
   if (!el) return;
   document.getElementById('onb-name').value = (S.profile.name && S.profile.name !== 'Денис') ? S.profile.name : '';
-  document.getElementById('onb-email').value = (S.profile.email && S.profile.email !== 'denis@example.com') ? S.profile.email : '';
+  const emRo = document.getElementById('onb-email-ro');
+  const accEmail = (window.cloudUser?.email) || (S.profile.email && S.profile.email !== 'denis@example.com' ? S.profile.email : '');
+  if (emRo) emRo.textContent = accEmail || '—';
+  const emFf = document.getElementById('onb-email-ff');
+  if (emFf) emFf.style.display = accEmail ? '' : 'none'; // в локальном режиме без аккаунта прячем
   document.getElementById('onb-lang').value = S.settings.lang || 'ru';
   document.getElementById('onb-cur').value = S.settings.currency || 'EUR';
   buildAvatarPicker('onb-emoji', S.profile.avatar || '');
@@ -2092,7 +2168,9 @@ function finishOnboarding() {
     toast('Введи имя');
     return;
   }
-  S.profile = { name, email: document.getElementById('onb-email').value.trim(), avatar: getAvatar('onb-emoji') || null };
+  // Email берём из аккаунта (задаётся при регистрации), вводить вручную нельзя.
+  const accEmail = (window.cloudUser?.email) || (S.profile.email && S.profile.email !== 'denis@example.com' ? S.profile.email : '');
+  S.profile = { name, email: accEmail, avatar: getAvatar('onb-emoji') || null };
   S.settings.lang = document.getElementById('onb-lang').value || 'ru';
   S.settings.currency = document.getElementById('onb-cur').value || 'EUR';
   S.settings.onboarded = true;
