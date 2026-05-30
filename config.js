@@ -16,6 +16,6 @@
 //      Redirect URLs — добавь его же и http://localhost:5050/ для дев-сборки.
 // ─────────────────────────────────────────────────────────────
 window.VAULT_CFG = {
-  SUPABASE_URL: '',      // например: 'https://abcd1234.supabase.co'
-  SUPABASE_ANON_KEY: '', // длинный JWT, начинается с 'eyJ...'
+  SUPABASE_URL: 'https://zenqfmjhawjytswiiwfi.supabase.co',      // например: 'https://abcd1234.supabase.co'
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InplbnFmbWpoYXdqeXRzd2lpd2ZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNDI3NTMsImV4cCI6MjA5NTcxODc1M30.BNeJrj3KIM7szlZ77DP6Yb5uWD1D89SYJ3gNlevfgIk', // длинный JWT, начинается с 'eyJ...'
 };
