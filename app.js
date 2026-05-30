@@ -265,7 +265,7 @@ function getEmoji(elId) {
   return document.querySelector(`#${elId} .egc.on`)?.dataset.e || '📦';
 }
 
-// ── AVATAR PICKER (фото + эмодзи + «буква») ──
+// ── AVATAR PICKER (только своё фото; иначе буква имени) ──
 const isImgAvatar = v => typeof v === 'string' && v.startsWith('data:');
 function buildAvatarPicker(elId, selected = '') {
   const el = document.getElementById(elId);
@@ -273,25 +273,21 @@ function buildAvatarPicker(elId, selected = '') {
   const nm = (S.profile && S.profile.name) ? S.profile.name.trim() : '';
   const letter = (nm && nm !== 'Денис' ? nm[0] : 'А').toUpperCase();
   const img = isImgAvatar(selected);
-  // Запоминаем загруженное фото прямо на элементе, чтобы getAvatar его достал.
+  // Текущее фото храним прямо на элементе, чтобы getAvatar его достал.
   el._imgData = img ? selected : null;
-  const cells = [
-    `<div class="egc av-letter${!selected ? ' on' : ''}" data-av="">${letter}</div>`,
-    `<div class="egc av-up${img ? ' on has-img' : ''}" data-av="upload"${img ? ` style="background-image:url('${selected}')"` : ''}>${img ? '' : '📷'}</div>`,
-  ].concat(AVATAR_EMO.map(e => `<div class="egc${selected === e ? ' on' : ''}" data-av="${e}">${e}</div>`));
-  el.innerHTML = cells.join('');
-  el.querySelectorAll('.egc').forEach(c => c.addEventListener('click', () => {
-    if (c.dataset.av === 'upload') { triggerAvatarUpload(elId); return; }
-    el.querySelectorAll('.egc').forEach(x => x.classList.remove('on'));
-    c.classList.add('on');
-  }));
+  el.classList.add('av-picker');
+  el.innerHTML = `
+    <div class="avp-prev${img ? ' has-img' : ''}"${img ? ` style="background-image:url('${selected}')"` : ''}>${img ? '' : letter}</div>
+    <div class="avp-actions">
+      <button type="button" class="avp-btn" data-act="upload">${img ? 'Изменить фото' : 'Загрузить фото'}</button>
+      ${img ? '<button type="button" class="avp-btn avp-rm" data-act="remove">Убрать</button>' : ''}
+    </div>`;
+  el.querySelector('[data-act="upload"]')?.addEventListener('click', () => triggerAvatarUpload(elId));
+  el.querySelector('[data-act="remove"]')?.addEventListener('click', () => { el._imgData = null; buildAvatarPicker(elId, ''); });
 }
 function getAvatar(elId) {
   const el = document.getElementById(elId);
-  const on = el?.querySelector('.egc.on');
-  if (!on) return '';
-  if (on.dataset.av === 'upload') return el._imgData || '';
-  return on.dataset.av;
+  return el?._imgData || '';
 }
 
 // Загрузка и сжатие фото-аватара (квадрат 256px, JPEG) → data-URL
@@ -310,13 +306,7 @@ function triggerAvatarUpload(elId) {
       const el = document.getElementById(elId);
       if (!el) return;
       el._imgData = dataUrl;
-      const tile = el.querySelector('.egc.av-up');
-      el.querySelectorAll('.egc').forEach(x => x.classList.remove('on'));
-      if (tile) {
-        tile.classList.add('on', 'has-img');
-        tile.textContent = '';
-        tile.style.backgroundImage = `url('${dataUrl}')`;
-      }
+      buildAvatarPicker(elId, dataUrl); // перерисуем превью + кнопки
     }).catch(() => toast('Не удалось обработать фото'));
   });
   inp.click();
@@ -1628,7 +1618,7 @@ function renderProfile() {
   } else {
     avEl.classList.remove('has-img');
     avEl.style.backgroundImage = '';
-    avEl.innerHTML = (p.avatar ? `<span class="av-emoji">${p.avatar}</span>` : (p.name || 'A')[0].toUpperCase()) + editBtn;
+    avEl.innerHTML = (p.name || 'A')[0].toUpperCase() + editBtn;
   }
   document.getElementById('p-name').textContent = p.name;
   document.getElementById('p-email').textContent = p.email || '—';
@@ -1720,8 +1710,6 @@ function renderFSCats(filter) {
 
 function openEditProf() {
   document.getElementById('prof-name').value = S.profile.name;
-  const em = document.getElementById('prof-email-ro');
-  if (em) em.textContent = S.profile.email || (window.cloudUser?.email) || '—';
   buildAvatarPicker('prof-emoji', S.profile.avatar || '');
   openM('m-prof');
 }
